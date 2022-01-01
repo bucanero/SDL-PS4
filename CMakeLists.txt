@@ -589,7 +589,7 @@ if(USE_GCC OR USE_CLANG)
     list(APPEND EXTRA_LDFLAGS "-Wl,-undefined,error")
     list(APPEND EXTRA_LDFLAGS "-Wl,-compatibility_version,${DYLIB_COMPATIBILITY_VERSION}")
     list(APPEND EXTRA_LDFLAGS "-Wl,-current_version,${DYLIB_CURRENT_VERSION}")
-  elseif(NOT OPENBSD)
+  elseif(NOT OPENBSD AND NOT PS4)
     set(CMAKE_REQUIRED_FLAGS "-Wl,--no-undefined")
     check_c_compiler_flag("" HAVE_NO_UNDEFINED)
     set(CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
@@ -2841,7 +2841,7 @@ if (PS4)
   add_executable(SDL2-ps4 test/testps4.c)
   target_link_libraries(SDL2-ps4
           SceSystemService SceSysUtil SceSysmodule SceNet ScePigletv2VSH
-          ${CMAKE_BINARY_DIR}/libSDL2d.a
+          SDL2-static
           )
   add_dependencies(SDL2-ps4 SDL2-static)
   add_self(SDL2-ps4)
