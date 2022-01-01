@@ -2,12 +2,12 @@
 // Created by cpasjuste on 31/12/2021.
 //
 
+#if SDL_VIDEO_DRIVER_PS4 && SDL_VIDEO_DRIVER_PS4_SHACC
+
 #include <orbis/libkernel.h>
 #include <sys/mman.h>
 
 #include "../../SDL_internal.h"
-
-#if SDL_VIDEO_DRIVER_PS4 && SDL_VIDEO_DRIVER_PS4_SHACC
 
 #define MODULE_SHACC "/data/self/system/common/lib/libSceShaccVSH.sprx"
 #define PIGLET_MODULE_NAME "libScePigletv2VSH.sprx"
