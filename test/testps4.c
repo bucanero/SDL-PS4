@@ -2,10 +2,6 @@
 // Created by cpasjuste on 30/12/2021.
 //
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-
 // for sceKernelDebugOutText
 #include <orbis/libkernel.h>
 
