@@ -27,6 +27,9 @@
 #include "../SDL_sysrender.h"
 #include "../../video/SDL_blit.h"
 #include "SDL_shaders_gles2.h"
+#if SDL_VIDEO_DRIVER_PS4 && !SDL_VIDEO_DRIVER_PS4_SHACC
+#include "../../video/ps4/SDL_ps4opengles_shaders.h"
+#endif
 
 /* To prevent unnecessary window recreation,
  * these should match the defaults selected in SDL_GL_ResetAttributes
@@ -234,6 +237,8 @@ static int GLES2_LoadFunctions(GLES2_RenderData * data)
 #elif SDL_VIDEO_DRIVER_ANDROID
 #define __SDL_NOGETPROCADDR__
 #elif SDL_VIDEO_DRIVER_PANDORA
+#define __SDL_NOGETPROCADDR__
+#elif SDL_VIDEO_DRIVER_PS4
 #define __SDL_NOGETPROCADDR__
 #endif
 
@@ -480,7 +485,12 @@ GLES2_CacheShader(GLES2_RenderData *data, GLES2_ShaderType type, GLenum shader_t
 {
     GLuint id;
     GLint compileSuccessful = GL_FALSE;
+#if SDL_VIDEO_DRIVER_PS4 && !SDL_VIDEO_DRIVER_PS4_SHACC
+    int binary_size;
+    const Uint8 *shader_src = PS4GLES2_GetShaderBinary(type, &binary_size);
+#else
     const Uint8 *shader_src = GLES2_GetShader(type);
+#endif
 
     if (!shader_src) {
         SDL_SetError("No shader src");
@@ -489,8 +499,12 @@ GLES2_CacheShader(GLES2_RenderData *data, GLES2_ShaderType type, GLenum shader_t
 
     /* Compile */
     id = data->glCreateShader(shader_type);
+#if SDL_VIDEO_DRIVER_PS4 && !SDL_VIDEO_DRIVER_PS4_SHACC
+    glShaderBinary(1, &id, 0, (const void *) shader_src, binary_size);
+#else
     data->glShaderSource(id, 1, (const char**)&shader_src, NULL);
     data->glCompileShader(id);
+#endif
     data->glGetShaderiv(id, GL_COMPILE_STATUS, &compileSuccessful);
 
     if (!compileSuccessful) {
@@ -1059,12 +1073,18 @@ GLES2_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *ver
 
     /* upload the new VBO data for this set of commands. */
     data->glBindBuffer(GL_ARRAY_BUFFER, vbo);
+#ifdef __PS4__
+    // TODO: fix glBufferSubData
+    data->glBufferData(GL_ARRAY_BUFFER, vertsize, vertices, GL_STREAM_DRAW);
+    data->vertex_buffer_size[vboidx] = vertsize;
+#else
     if (data->vertex_buffer_size[vboidx] < vertsize) {
         data->glBufferData(GL_ARRAY_BUFFER, vertsize, vertices, GL_STREAM_DRAW);
         data->vertex_buffer_size[vboidx] = vertsize;
     } else {
         data->glBufferSubData(GL_ARRAY_BUFFER, 0, vertsize, vertices);
     }
+#endif
 
     /* cycle through a few VBOs so the GL has some time with the data before we replace it. */
     data->current_vertex_buffer++;
@@ -1201,7 +1221,7 @@ GLES2_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *ver
                 if (ret == 0) {
                     int op = GL_TRIANGLES; /* SDL_RENDERCMD_GEOMETRY */
                     if (thiscmdtype == SDL_RENDERCMD_DRAW_POINTS) {
-                        op = GL_POINTS; 
+                        op = GL_POINTS;
                     }
                     data->glDrawArrays(op, 0, (GLsizei) count);
                 }

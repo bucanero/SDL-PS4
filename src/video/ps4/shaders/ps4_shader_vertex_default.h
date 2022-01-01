@@ -1,0 +1,11 @@
+//
+// Created by cpasjuste on 01/01/2022.
+//
+
+#ifndef SDL2_PS4_SHADER_VERTEX_DEFAULT_H
+#define SDL2_PS4_SHADER_VERTEX_DEFAULT_H
+
+extern const char PS4_SHADER_VERTEX_DEFAULT[];
+const int PS4_SHADER_VERTEX_DEFAULT_LENGTH = 1249;
+
+#endif //SDL2_PS4_SHADER_VERTEX_DEFAULT_H

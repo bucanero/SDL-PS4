@@ -503,7 +503,7 @@ SDL_EGL_LoadLibrary(_THIS, const char *egl_path, NativeDisplayType native_displa
     _this->egl_data->egl_display = EGL_NO_DISPLAY;
 
 #if !defined(__WINRT__)
-#if !defined(SDL_VIDEO_DRIVER_VITA)
+#if !defined(SDL_VIDEO_DRIVER_VITA) && !defined(SDL_VIDEO_DRIVER_PS4)
     if (platform) {
         /* EGL 1.5 allows querying for client version with EGL_NO_DISPLAY
          * --
