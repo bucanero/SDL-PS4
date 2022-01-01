@@ -6,52 +6,14 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#ifdef __ORBISDEV__
-#include <libSceSysmodule.h>
-#include <libSceSystemService.h>
-#include <debugnet.h>
-#else
-
+// for sceKernelDebugOutText
 #include <orbis/libkernel.h>
-#include <orbis/Sysmodule.h>
-#include <orbis/SystemService.h>
-
-#define SCE_SYSMODULE_INTERNAL_NET ORBIS_SYSMODULE_INTERNAL_NET
-#define SCE_SYSMODULE_INTERNAL_SYSTEM_SERVICE ORBIS_SYSMODULE_INTERNAL_SYSTEM_SERVICE
-#define SCE_SYSMODULE_INTERNAL_USER_SERVICE ORBIS_SYSMODULE_INTERNAL_USER_SERVICE
-//#define SCE_SYSMODULE_INTERNAL_PAD ORBIS_SYSMODULE_INTERNAL_PAD
-#endif
 
 #include "../include/SDL.h"
 
 static SDL_DisplayMode modes[5];
 
 static int mode_count = 0, current_mode = 0;
-
-bool init_ps4() {
-    int ret;
-
-    ret = sceSysmoduleLoadModuleInternal(SCE_SYSMODULE_INTERNAL_SYSTEM_SERVICE);
-    if (ret != 0) {
-        return false;
-    }
-    ret = sceSysmoduleLoadModuleInternal(SCE_SYSMODULE_INTERNAL_USER_SERVICE);
-    if (ret != 0) {
-        return false;
-    }
-    /*
-    ret = sceSysmoduleLoadModuleInternal(SCE_SYSMODULE_INTERNAL_PAD);
-    if (ret != 0) {
-        return false;
-    }
-    */
-
-    // hide splash screen (is this mandatory ?)
-    sceSystemServiceHideSplashScreen();
-    sceKernelDebugOutText(0, "init_ps4: done...\n");
-
-    return true;
-}
 
 void *log_cb(void *userdata, int category, SDL_LogPriority priority, const char *message) {
     sceKernelDebugOutText(0, message);
@@ -108,7 +70,7 @@ int main(int argc, char *argv[]) {
     SDL_Renderer *renderer;
     int done = 0, x = 0, w = 0, h = 0;
 
-    init_ps4();
+    // sceKernelDebugOutText
     SDL_LogSetOutputFunction((SDL_LogOutputFunction) &log_cb, NULL);
 
     // mandatory at least on switch, else gfx is not properly closed
