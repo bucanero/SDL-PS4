@@ -33,7 +33,7 @@
 
 char *
 SDL_GetBasePath(void) {
-    const char *basepath = "app0:/";
+    const char *basepath = "/app0/";
     char *retval = SDL_strdup(basepath);
     return retval;
 }
