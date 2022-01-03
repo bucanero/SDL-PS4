@@ -27,12 +27,9 @@
 #include <orbis/Pad.h>
 
 #include <stdio.h>      /* For the definition of NULL */
-#include <stdlib.h>
 #include <orbis/Sysmodule.h>
 
 #include "../SDL_sysjoystick.h"
-#include "../SDL_joystick_c.h"
-
 #include "SDL_events.h"
 #include "SDL_error.h"
 
@@ -41,12 +38,6 @@
 /* Current pad state */
 static OrbisPadData pads[ORBIS_USER_SERVICE_MAX_LOGIN_USERS];
 static int port_map[ORBIS_USER_SERVICE_MAX_LOGIN_USERS]; //index: SDL joy number, entry: handle
-
-//static OrbisPadData pad0 = {.leftStick = {0, 0}, .rightStick = {0, 0}, .analogButtons = {0, 0}, .buttons = 0};
-//static OrbisPadData pad1 = {.leftStick = {0, 0}, .rightStick = {0, 0}, .analogButtons = {0, 0}, .buttons = 0};
-//static OrbisPadData pad2 = {.leftStick = {0, 0}, .rightStick = {0, 0}, .analogButtons = {0, 0}, .buttons = 0};
-//static OrbisPadData pad3 = {.leftStick = {0, 0}, .rightStick = {0, 0}, .analogButtons = {0, 0}, .buttons = 0};
-//static int port_map[4] = {0, 2, 3, 4}; //index: SDL joy number, entry: userId
 
 static int SDL_numjoysticks = 1;
 
