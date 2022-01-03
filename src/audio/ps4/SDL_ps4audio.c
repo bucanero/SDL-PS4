@@ -34,7 +34,17 @@
 #include <orbis/AudioOut.h>
 #include <orbis/Sysmodule.h>
 
-#define SAMPLE_ALIGN(s) (((s) + 63) & ~63)
+inline static Uint16
+ps4_sample_size(Uint16 size) {
+    if (size >= 2048) return 2048;
+    if (size >= 1792) return 1792;
+    if (size >= 1536) return 1536;
+    if (size >= 1280) return 1280;
+    if (size >= 1024) return 1024;
+    if (size >= 768) return 768;
+    if (size >= 512) return 512;
+    return 256;
+}
 
 static int
 PS4AUD_OpenDevice(_THIS, void *handle, const char *devname, int iscapture) {
@@ -61,8 +71,7 @@ PS4AUD_OpenDevice(_THIS, void *handle, const char *devname, int iscapture) {
             return SDL_SetError("PS4AUD_OpenDevice: unsupported audio format: 0x%08x", this->spec.format);
     }
 
-    /* The sample count must be a multiple of 64. */
-    this->spec.samples = SAMPLE_ALIGN(this->spec.samples);
+    this->spec.samples = ps4_sample_size(this->spec.samples);
     // TODO: use libsamplerate
     this->spec.freq = 48000;
 
@@ -106,7 +115,7 @@ static void PS4AUD_PlayDevice(_THIS) {
 /* This function waits until it is possible to write a full sound buffer */
 static void PS4AUD_WaitDevice(_THIS) {
     // TODO: verify if needed
-    sceAudioOutOutput(this->hidden->aout, NULL);
+    //sceAudioOutOutput(this->hidden->aout, NULL);
 }
 
 static Uint8 *PS4AUD_GetDeviceBuf(_THIS) {

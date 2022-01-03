@@ -2,18 +2,19 @@
 // Created by cpasjuste on 30/12/2021.
 //
 
-// for sceKernelDebugOutText
-#include <orbis/libkernel.h>
-
+#include <stdio.h>
+#include <orbis/libkernel.h> // for sceKernelDebugOutText
 #include "../include/SDL.h"
 
-static SDL_DisplayMode modes[5];
-
-static int mode_count = 0, current_mode = 0;
+SDL_DisplayMode modes[5];
+int mode_count = 0, current_mode = 0;
+char log_buffer[128];
+Uint8 *audio_pos;
+Uint32 audio_len;
 
 void *log_cb(void *userdata, int category, SDL_LogPriority priority, const char *message) {
-    sceKernelDebugOutText(0, message);
-    sceKernelDebugOutText(0, "\n");
+    snprintf(log_buffer, 127, "<== SDL2 ==> %s\n", message);
+    sceKernelDebugOutText(0, log_buffer);
     return NULL;
 }
 
@@ -59,6 +60,52 @@ void draw_rects(SDL_Renderer *renderer, int x, int y) {
     SDL_RenderFillRect(renderer, &b);
 }
 
+void audio_callback(void *userdata, Uint8 *stream, int len) {
+    if (audio_len == 0)
+        return;
+    len = (len > audio_len ? audio_len : len);
+    SDL_memcpy(stream, audio_pos, len);
+    audio_pos += len;
+    audio_len -= len;
+}
+
+void audio_test() {
+    Uint32 wav_length;
+    Uint8 *wav_buffer;
+    SDL_AudioSpec wav_spec, got_spec;
+
+    if (SDL_LoadWAV("/data/test.wav", &wav_spec, &wav_buffer, &wav_length) == NULL) {
+        SDL_Log("SDL_LoadWAV failed\n");
+        return;
+    }
+
+    wav_spec.callback = audio_callback;
+    wav_spec.userdata = NULL;
+    audio_pos = wav_buffer;
+    audio_len = wav_length;
+    if (SDL_OpenAudio(&wav_spec, &got_spec) < 0) {
+        SDL_Log("couldn't open audio: %s\n", SDL_GetError());
+        return;
+    }
+
+    SDL_Log("wav_spec: %i chan, %i hz, %i samples\n",
+            wav_spec.channels, wav_spec.freq, wav_spec.samples);
+
+    SDL_Log("got_spec: %i chan, %i hz, %i samples\n",
+            got_spec.channels, got_spec.freq, got_spec.samples);
+
+    SDL_Log("playing: \"/data/test.wav\"\n");
+    SDL_PauseAudio(0);
+
+    while (audio_len > 0) {
+        SDL_Delay(100);
+    }
+
+    SDL_CloseAudio();
+    SDL_FreeWAV(wav_buffer);
+    SDL_Log("played...\n");
+}
+
 int main(int argc, char *argv[]) {
 
     SDL_Event event;
@@ -70,7 +117,7 @@ int main(int argc, char *argv[]) {
     SDL_LogSetOutputFunction((SDL_LogOutputFunction) &log_cb, NULL);
 
     // mandatory at least on switch, else gfx is not properly closed
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0) {
         SDL_Log("SDL_Init: %s\n", SDL_GetError());
         return -1;
     }
@@ -132,7 +179,7 @@ int main(int argc, char *argv[]) {
                             event.jbutton.which, event.jbutton.button);
                     if (event.jbutton.which == 0) {
                         if (event.jbutton.button == 0) {
-                            // joystick #0 down (A)
+                            // joystick #0 down (/\)
                             change_mode(window);
                             print_info(window, renderer);
                         } else if (event.jbutton.button == 2) {
@@ -143,9 +190,12 @@ int main(int argc, char *argv[]) {
                                 SDL_SetWindowSize(window, 1920, 1080);
                             }
                             print_info(window, renderer);
+                        } else if (event.jbutton.button == 3) {
+                            // joystick #0 down ([])
+                            audio_test();
                         }
                     }
-                    // joystick #0 down (B)
+                    // joystick #0 down (O)
                     if (event.jbutton.which == 0 && event.jbutton.button == 1) {
                         done = 1;
                     }
