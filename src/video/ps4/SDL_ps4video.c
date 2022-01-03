@@ -28,6 +28,7 @@
 #include <orbis/Pigletv2VSH.h>
 #include <orbis/Sysmodule.h>
 #include <orbis/SystemService.h>
+#include <orbis/UserService.h>
 
 #include "../SDL_sysvideo.h"
 #include "../../render/SDL_sysrender.h"
@@ -86,6 +87,22 @@ PS4_CreateDevice(int devindex) {
     ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_SYSTEM_SERVICE);
     if (ret != 0) {
         SDL_Log("PS4_CreateDevice: load module failed: SYSTEM_SERVICE (0x%08x)\n", ret);
+        return NULL;
+    }
+
+    // load user module
+    ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_USER_SERVICE);
+    if (ret != 0) {
+        SDL_Log("PS4_JoystickInit: load module failed: USER_SERVICE (0x%08x)\n", ret);
+        return NULL;
+    }
+
+    // initialize user service (used for pad and audio drivers)
+    OrbisUserServiceInitializeParams param;
+    param.priority = ORBIS_KERNEL_PRIO_FIFO_LOWEST;
+    ret = sceUserServiceInitialize(&param);
+    if (ret != 0) {
+        SDL_Log("PS4_JoystickInit: sceUserServiceInitialize failed (0x%08x)\n", ret);
         return NULL;
     }
 

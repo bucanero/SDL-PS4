@@ -101,6 +101,9 @@ static const AudioBootStrap *const bootstrap[] = {
 #if SDL_AUDIO_DRIVER_VITA
     &VITAAUD_bootstrap,
 #endif
+#if SDL_AUDIO_DRIVER_PS4
+    &PS4AUD_bootstrap,
+#endif
 #if SDL_AUDIO_DRIVER_EMSCRIPTEN
     &EMSCRIPTENAUDIO_bootstrap,
 #endif

@@ -23,11 +23,9 @@
 #if SDL_JOYSTICK_PS4
 
 /* This is the PS4 implementation of the SDL joystick API */
+#include <orbis/Sysmodule.h>
 #include <orbis/UserService.h>
 #include <orbis/Pad.h>
-
-#include <stdio.h>      /* For the definition of NULL */
-#include <orbis/Sysmodule.h>
 
 #include "../SDL_sysjoystick.h"
 #include "SDL_events.h"
@@ -122,20 +120,6 @@ int PS4_JoystickInit(void) {
 
     int i;
     uint32_t ret;
-
-    // load user module
-    ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_USER_SERVICE);
-    if (ret != 0) {
-        return SDL_SetError("PS4_JoystickInit: load module failed: USER_SERVICE (0x%08x)\n", ret);
-    }
-
-    // initialize user service
-    OrbisUserServiceInitializeParams param;
-    param.priority = ORBIS_KERNEL_PRIO_FIFO_LOWEST;
-    ret = sceUserServiceInitialize(&param);
-    if (ret != 0) {
-        return SDL_SetError("PS4_JoystickInit: sceUserServiceInitialize failed (0x%08x)\n", ret);
-    }
 
     // load pad module
     ret = sceSysmoduleLoadModuleInternal(0x80000024);
