@@ -2374,10 +2374,10 @@ elseif (PS4)
     set(HAVE_SDL_FILESYSTEM TRUE)
   endif ()
   if (SDL_JOYSTICK)
-    #set(SDL_JOYSTICK_PS4 1)
-    #file(GLOB PS4_JOYSTICK_SOURCES ${SDL2_SOURCE_DIR}/src/joystick/ps4/*.c)
-    #set(SOURCE_FILES ${SOURCE_FILES} ${PS4_JOYSTICK_SOURCES})
-    #set(HAVE_SDL_JOYSTICK TRUE)
+    set(SDL_JOYSTICK_PS4 1)
+    file(GLOB PS4_JOYSTICK_SOURCES ${SDL2_SOURCE_DIR}/src/joystick/ps4/*.c)
+    set(SOURCE_FILES ${SOURCE_FILES} ${PS4_JOYSTICK_SOURCES})
+    set(HAVE_SDL_JOYSTICK TRUE)
   endif ()
   if (SDL_POWER)
     #set(SDL_POWER_PS4 1)
@@ -2407,7 +2407,9 @@ elseif (PS4)
   set(SDL_STATIC_PIC ON)
   set(HAVE_CLOCK_GETTIME 1)
   list(APPEND EXTRA_CFLAGS "-D__PS4__ -DSDL_VIDEO_STATIC_ANGLE")
-  list(APPEND EXTRA_LIBS)
+  list(APPEND EXTRA_LIBS
+          SceSystemService SceSysUtil SceSysmodule
+          SceUserService ScePad ScePigletv2VSH)
   # shader compiler
   if(SDL_VIDEO_DRIVER_PS4_SHACC)
     list(APPEND EXTRA_CFLAGS "-DSDL_VIDEO_DRIVER_PS4_SHACC")
@@ -2839,10 +2841,7 @@ endif()
 
 if (PS4)
   add_executable(SDL2-ps4 test/testps4.c)
-  target_link_libraries(SDL2-ps4
-          SceSystemService SceSysUtil SceSysmodule SceNet ScePigletv2VSH
-          SDL2-static
-          )
+  target_link_libraries(SDL2-ps4 SDL2-static)
   add_dependencies(SDL2-ps4 SDL2-static)
   add_self(SDL2-ps4)
 endif ()

@@ -113,15 +113,11 @@ int main(int argc, char *argv[]) {
                 SDL_GetPixelFormatName(mode.format));
     }
 
-    /*
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 4; i++) {
         if (SDL_JoystickOpen(i) == NULL) {
             SDL_Log("SDL_JoystickOpen: %s\n", SDL_GetError());
-            SDL_Quit();
-            return -1;
         }
     }
-    */
 
     while (!done) {
 
@@ -138,6 +134,7 @@ int main(int argc, char *argv[]) {
                 case SDL_JOYBUTTONDOWN:
                     SDL_Log("Joystick %d button %d down\n",
                             event.jbutton.which, event.jbutton.button);
+#if 0
                     if (event.jbutton.which == 0) {
                         if (event.jbutton.button == 0) {
                             // joystick #0 down (A)
@@ -153,6 +150,7 @@ int main(int argc, char *argv[]) {
                             print_info(window, renderer);
                         }
                     }
+#endif
                     // joystick #0 down (B)
                     if (event.jbutton.which == 0 && event.jbutton.button == 1) {
                         done = 1;

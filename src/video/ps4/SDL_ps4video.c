@@ -40,7 +40,6 @@
 
 #if SDL_VIDEO_DRIVER_PS4_SHACC
 extern int PS4_SHACC_Init();
-#define MODULE_PIGLET "/data/self/system/common/lib/libScePigletv2VSH.sprx"
 #endif
 
 /* Only one window supported */
@@ -87,12 +86,6 @@ PS4_CreateDevice(int devindex) {
     ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_SYSTEM_SERVICE);
     if (ret != 0) {
         SDL_Log("PS4_CreateDevice: load module failed: SYSTEM_SERVICE (0x%08x)\n", ret);
-        return NULL;
-    }
-
-    ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_USER_SERVICE);
-    if (ret != 0) {
-        SDL_Log("PS4_CreateDevice: load module failed: USER_SERVICE (0x%08x)\n", ret);
         return NULL;
     }
 
@@ -184,8 +177,6 @@ PS4_VideoInit(_THIS) {
 
     // TODO
     /*
-    // init touch
-    PS4_InitTouch();
     // init keyboard
     PS4_InitKeyboard();
     // init mouse
@@ -210,8 +201,6 @@ PS4_VideoQuit(_THIS) {
 
     // TODO
     /*
-    // exit touch
-    PS4_QuitTouch();
     // exit keyboard
     PS4_QuitKeyboard();
     // exit mouse
@@ -432,7 +421,6 @@ PS4_PumpEvents(_THIS) {
     /*
     // we don't want other inputs overlapping with software keyboard
     if(!SDL_IsTextInputActive()) {
-        PS4_PollTouch();
         PS4_PollKeyboard();
         PS4_PollMouse();
     }
