@@ -32,6 +32,7 @@
 #include "SDL_ps4audio.h"
 
 #include <orbis/AudioOut.h>
+#include <orbis/Sysmodule.h>
 
 #define SAMPLE_ALIGN(s) (((s) + 63) & ~63)
 
@@ -147,6 +148,12 @@ static int
 PS4AUD_Init(SDL_AudioDriverImpl *impl) {
 
     uint32_t ret;
+
+    // load audio module
+    ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_AUDIOOUT);
+    if (ret != 0) {
+        return SDL_SetError("PS4_JoystickInit: load module failed: PAD (0x%08x)\n", ret);
+    }
 
     ret = sceAudioOutInit();
     if (ret != 0) {
