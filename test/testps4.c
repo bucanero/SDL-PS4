@@ -113,28 +113,23 @@ int main(int argc, char *argv[]) {
                 SDL_GetPixelFormatName(mode.format));
     }
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 1; i++) {
         if (SDL_JoystickOpen(i) == NULL) {
             SDL_Log("SDL_JoystickOpen: %s\n", SDL_GetError());
         }
     }
 
     while (!done) {
-
         while (SDL_PollEvent(&event)) {
-
             switch (event.type) {
-
                 case SDL_JOYAXISMOTION:
                     SDL_Log("Joystick %d axis %d value: %d\n",
                             event.jaxis.which,
                             event.jaxis.axis, event.jaxis.value);
                     break;
-
                 case SDL_JOYBUTTONDOWN:
                     SDL_Log("Joystick %d button %d down\n",
                             event.jbutton.which, event.jbutton.button);
-#if 0
                     if (event.jbutton.which == 0) {
                         if (event.jbutton.button == 0) {
                             // joystick #0 down (A)
@@ -150,19 +145,17 @@ int main(int argc, char *argv[]) {
                             print_info(window, renderer);
                         }
                     }
-#endif
                     // joystick #0 down (B)
                     if (event.jbutton.which == 0 && event.jbutton.button == 1) {
                         done = 1;
                     }
                     break;
-
                 default:
                     break;
             }
         }
 
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
         // Fill renderer bounds
