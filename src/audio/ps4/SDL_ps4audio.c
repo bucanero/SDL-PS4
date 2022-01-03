@@ -152,7 +152,7 @@ PS4AUD_Init(SDL_AudioDriverImpl *impl) {
     // load audio module
     ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_AUDIOOUT);
     if (ret != 0) {
-        return SDL_SetError("PS4_JoystickInit: load module failed: PAD (0x%08x)\n", ret);
+        return SDL_SetError("PS4AUD_Init: load module failed: AUDIOOUT (0x%08x)\n", ret);
     }
 
     ret = sceAudioOutInit();
