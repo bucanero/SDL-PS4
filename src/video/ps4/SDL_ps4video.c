@@ -66,6 +66,7 @@ PS4_Destroy(SDL_VideoDevice *device) {
         }
         SDL_free(device);
     }
+    SDL_Log("PS4_Destroy done\n");
 }
 
 static SDL_VideoDevice *
@@ -209,13 +210,6 @@ void
 PS4_VideoQuit(_THIS) {
     SDL_Log("PS4_VideoQuit\n");
 
-    // this should not be needed if user code is right (SDL_GL_LoadLibrary/SDL_GL_UnloadLibrary calls match)
-    // this (user) error doesn't have the same effect on ps4 thought, as the driver needs to be unloaded (crash)
-    if (_this->gl_config.driver_loaded > 0) {
-        PS4_GLES_UnloadLibrary(_this);
-        _this->gl_config.driver_loaded = 0;
-    }
-
     // TODO
     /*
     // exit keyboard
@@ -243,8 +237,6 @@ PS4_GetDisplayModes(_THIS, SDL_VideoDisplay *display) {
     mode.refresh_rate = 60;
     mode.format = SDL_PIXELFORMAT_RGBA8888;
     SDL_AddDisplayMode(display, &mode);
-
-    SDL_Log("PS4_GetDisplayModes: ok\n");
 }
 
 int
@@ -272,8 +264,6 @@ PS4_SetDisplayMode(_THIS, SDL_VideoDisplay *display, SDL_DisplayMode *mode) {
         data->egl_surface = SDL_EGL_CreateSurface(_this, &ps4_egl_window);
         SDL_EGL_MakeCurrent(_this, data->egl_surface, ctx);
     }
-
-    SDL_Log("PS4_SetDisplayMode: ok\n");
 
     return 0;
 }
