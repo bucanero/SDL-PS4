@@ -250,7 +250,6 @@ PS4_SetDisplayMode(_THIS, SDL_VideoDisplay *display, SDL_DisplayMode *mode) {
         SDL_EGL_MakeCurrent(_this, NULL, NULL);
         SDL_EGL_DestroySurface(_this, data->egl_surface);
 
-        // TODO: test this
         ps4_pgl_config.dbgPosCmd_0x40 = mode->w;
         ps4_pgl_config.dbgPosCmd_0x44 = mode->h;
         if (!scePigletSetConfigurationVSH(&ps4_pgl_config)) {
@@ -259,7 +258,6 @@ PS4_SetDisplayMode(_THIS, SDL_VideoDisplay *display, SDL_DisplayMode *mode) {
         }
         ps4_egl_window.uWidth = mode->w;
         ps4_egl_window.uHeight = mode->h;
-        // TODO: test this
 
         data->egl_surface = SDL_EGL_CreateSurface(_this, &ps4_egl_window);
         SDL_EGL_MakeCurrent(_this, data->egl_surface, ctx);
@@ -367,29 +365,24 @@ void
 PS4_SetWindowSize(_THIS, SDL_Window *window) {
     SDL_Log("PS4_SetWindowSize\n");
 
-    int w = 0, h = 0;
     SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
     SDL_GLContext ctx = SDL_GL_GetCurrentContext();
 
-    if (window->w != w || window->h != h) {
-        if (data != NULL && data->egl_surface != EGL_NO_SURFACE) {
-            SDL_EGL_MakeCurrent(_this, NULL, NULL);
-            SDL_EGL_DestroySurface(_this, data->egl_surface);
+    if (data != NULL && data->egl_surface != EGL_NO_SURFACE) {
+        SDL_EGL_MakeCurrent(_this, NULL, NULL);
+        SDL_EGL_DestroySurface(_this, data->egl_surface);
 
-            // TODO: test this
-            ps4_pgl_config.dbgPosCmd_0x40 = window->w;
-            ps4_pgl_config.dbgPosCmd_0x44 = window->h;
-            if (!scePigletSetConfigurationVSH(&ps4_pgl_config)) {
-                SDL_Log("PS4_SetWindowSize: scePigletSetConfigurationVSH failed\n");
-                return;
-            }
-            ps4_egl_window.uWidth = window->w;
-            ps4_egl_window.uHeight = window->h;
-            // TODO: test this
-
-            data->egl_surface = SDL_EGL_CreateSurface(_this, &ps4_egl_window);
-            SDL_EGL_MakeCurrent(_this, data->egl_surface, ctx);
+        ps4_pgl_config.dbgPosCmd_0x40 = window->w;
+        ps4_pgl_config.dbgPosCmd_0x44 = window->h;
+        if (!scePigletSetConfigurationVSH(&ps4_pgl_config)) {
+            SDL_Log("PS4_SetWindowSize: scePigletSetConfigurationVSH failed\n");
+            return;
         }
+        ps4_egl_window.uWidth = window->w;
+        ps4_egl_window.uHeight = window->h;
+
+        data->egl_surface = SDL_EGL_CreateSurface(_this, &ps4_egl_window);
+        SDL_EGL_MakeCurrent(_this, data->egl_surface, ctx);
     }
 }
 
