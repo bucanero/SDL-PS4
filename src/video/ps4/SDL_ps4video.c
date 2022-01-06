@@ -35,56 +35,49 @@
 #include "../../events/SDL_keyboard_c.h"
 #include "../../events/SDL_mouse_c.h"
 #include "../../events/SDL_windowevents_c.h"
+#include "SDL_timer.h"
+#include "SDL_hints.h"
 
 #include "SDL_ps4video.h"
 #include "SDL_ps4opengles.h"
-#include "SDL_timer.h"
-
-#if SDL_VIDEO_DRIVER_PS4_SHACC
-extern int PS4_SHACC_Init();
-#endif
+#include "SDL_ps4piglet.h"
 
 /* Only one window supported */
 static SDL_Window *ps4_window = NULL;
 static OrbisPglConfig ps4_pgl_config;
 static OrbisPglWindow ps4_egl_window;
-static uint32_t ps4_pgl_modId;
 static bool ps4_init_done = false;
 
-void
+int
 PS4_LoadModules() {
-    char pgl_path[256];
     uint32_t ret;
 
     if (ps4_init_done) {
-        return;
+        return 0;
     }
 
     // load common modules
     ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_SYSTEM_SERVICE);
     if (ret != 0) {
-        SDL_Log("PS4_LoadModules: load module failed: SYSTEM_SERVICE (0x%08x)\n", ret);
-        return;
+        return SDL_SetError("PS4_LoadModules: load module failed: SYSTEM_SERVICE (0x%08x)\n", ret);
     }
 
     // load user module
     ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_USER_SERVICE);
     if (ret != 0) {
-        SDL_Log("PS4_LoadModules: load module failed: USER_SERVICE (0x%08x)\n", ret);
-        return;
+        return SDL_SetError("PS4_LoadModules: load module failed: USER_SERVICE (0x%08x)\n", ret);
     }
 
     // load pad module
     ret = sceSysmoduleLoadModuleInternal(0x80000024);
     if (ret != 0) {
-        SDL_Log("PS4_LoadModules: load module failed: PAD (0x%08x)\n", ret);
-        return;
+        return SDL_SetError("PS4_LoadModules: load module failed: PAD (0x%08x)\n", ret);
     }
 
     // load audio module
     ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_AUDIOOUT);
     if (ret != 0) {
-        SDL_Log("PS4_LoadModules: load module failed: AUDIOOUT (0x%08x)\n", ret);
+        return SDL_SetError("PS4_LoadModules: load module failed: AUDIOOUT (0x%08x)\n", ret);
     }
 
     // initialize user service (used for pad and audio drivers)
@@ -92,39 +85,24 @@ PS4_LoadModules() {
     param.priority = ORBIS_KERNEL_PRIO_FIFO_LOWEST;
     ret = sceUserServiceInitialize(&param);
     if (ret != 0) {
-        SDL_Log("PS4_LoadModules: sceUserServiceInitialize failed (0x%08x)\n", ret);
-        return;
+        return SDL_SetError("PS4_LoadModules: sceUserServiceInitialize failed (0x%08x)\n", ret);
     }
 
-    // load piglet module
-    sprintf(pgl_path, "/%s/common/lib/libScePigletv2VSH.sprx", sceKernelGetFsSandboxRandomWord());
-    ps4_pgl_modId = sceKernelLoadStartModule(pgl_path, 0, NULL, 0, NULL, NULL);
-    if (ps4_pgl_modId < 0) {
-        SDL_Log("PS4_LoadModules: could not load piglet module (0x%08x)\n", ps4_pgl_modId);
-        return;
-    }
-
-#if SDL_VIDEO_DRIVER_PS4_SHACC
-    // load shader compiler module
-    PS4_SHACC_Init();
-#endif
+    // load piglet
+    PS4_PigletInit();
 
     // hide splash screen (is this mandatory ?)
     sceSystemServiceHideSplashScreen();
 
     ps4_init_done = true;
+    return 0;
 }
 
 static void
 PS4_Destroy(SDL_VideoDevice *device) {
     SDL_Log("PS4_Destroy\n");
 
-    int res;
-
-    if (ps4_pgl_modId >= 0) {
-        sceKernelStopUnloadModule(ps4_pgl_modId, 0, NULL, 0, NULL, &res);
-        ps4_pgl_modId = -1;
-    }
+    PS4_PigletExit();
 
     if (device != NULL) {
         if (device->driverdata != NULL) {

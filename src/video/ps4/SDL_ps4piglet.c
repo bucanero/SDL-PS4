@@ -2,20 +2,25 @@
 // Created by cpasjuste on 31/12/2021.
 //
 
-#if SDL_VIDEO_DRIVER_PS4 && SDL_VIDEO_DRIVER_PS4_SHACC
+//#if SDL_VIDEO_DRIVER_PS4
 
 #include <orbis/libkernel.h>
 #include <sys/mman.h>
 
 #include "../../SDL_internal.h"
+#include "SDL_hints.h"
+#include "SDL_error.h"
+#include "SDL_ps4piglet.h"
 
-#define MODULE_SHACC "/data/self/system/common/lib/libSceShaccVSH.sprx"
 #define PIGLET_MODULE_NAME "libScePigletv2VSH.sprx"
+#define SHACC_MODULE_NAME "libSceShaccVSH.sprx"
+
 #define ARRAY_SIZE(ar) (sizeof(ar) / sizeof((ar)[0]))
 
 typedef void module_patch_cb_t(uint8_t *base);
 
-static uint32_t modId;
+static uint32_t shaccModId;
+static uint32_t pigletModId;
 
 /* XXX: patches below are given for Piglet module from 4.74 Devkit PUP */
 static void pgl_patches_cb(uint8_t *base) {
@@ -32,7 +37,7 @@ static void pgl_patches_cb(uint8_t *base) {
     *(uint8_t *) (base + 0xB2E21) = 1;
 
     /* Inform Piglet that we have shader compiler module loaded */
-    *(int32_t *) (base + 0xB2E24) = modId;
+    *(int32_t *) (base + 0xB2E24) = shaccModId;
 }
 
 static unsigned int sceKernelGetModuleInfoByName(const char *name, OrbisKernelModuleInfo *info) {
@@ -67,7 +72,7 @@ static unsigned int sceKernelGetModuleInfoByName(const char *name, OrbisKernelMo
             return ret;
         }
 
-        SDL_Log("sceKernelGetModuleInfoByName: sceKernelGetModuleInfo[%zu]: %s\n", i, tmpInfo.name);
+        SDL_Log("sceKernelGetModuleInfoByName: [%zu]: %s\n", i, tmpInfo.name);
 
         if (strcmp(tmpInfo.name, name) == 0) {
             SDL_Log("sceKernelGetModuleInfoByName: piglet module found: %s\n", tmpInfo.name);
@@ -129,26 +134,60 @@ static int shaderCompilerPatchModule(const char *name, module_patch_cb_t *cb) {
     return 0;
 }
 
-int PS4_SHACC_Init() {
+int PS4_PigletInit() {
 
-    SDL_Log("PS4_SHACC_Init\n");
+    SDL_Log("PS4_PigletInit\n");
+    char module_path[512];
 
-    modId = sceKernelLoadStartModule(MODULE_SHACC, 0, NULL, 0, NULL, NULL);
-    if (modId < 0) {
-        SDL_Log("PS4_SHACC_Init: could not load module (0x%08x): %s\n", modId, MODULE_SHACC);
-        return 1;
+    // load piglet and shader compiler module from specified path if requested
+    // else load from piglet from device without shader compiler support
+    const char *path = SDL_GetHint(SDL_HINT_PS4_PIGLET_MODULES_PATH);
+    if (path) {
+        snprintf(module_path, 511, "%s/%s", path, PIGLET_MODULE_NAME);
+        SDL_Log("PS4_PigletInit: loading piglet module from: %s\n", module_path);
+        pigletModId = sceKernelLoadStartModule(module_path, 0, NULL, 0, NULL, NULL);
+        if (pigletModId < 0) {
+            SDL_Log("PS4_PigletInit: could not piglet load module %s (0x%08x)\n", module_path, pigletModId);
+            return 1;
+        }
+        snprintf(module_path, 511, "%s/%s", path, SHACC_MODULE_NAME);
+        SDL_Log("PS4_PigletInit: loading shacc module from: %s\n", module_path);
+        shaccModId = sceKernelLoadStartModule(module_path, 0, NULL, 0, NULL, NULL);
+        if (shaccModId < 0) {
+            SDL_Log("PS4_PigletInit: could not load shacc module %s (0x%08x)\n", module_path, shaccModId);
+            return 1;
+        }
+        if (shaderCompilerPatchModule(PIGLET_MODULE_NAME, &pgl_patches_cb) != 0) {
+            sceKernelStopUnloadModule(shaccModId, 0, NULL, 0, NULL, NULL);
+            shaccModId = 0;
+            SDL_Log("PS4_PigletInit: unable to patch piglet module.\n");
+            return 1;
+        }
+    } else {
+        snprintf(module_path, 511, "/%s/common/lib/libScePigletv2VSH.sprx", sceKernelGetFsSandboxRandomWord());
+        SDL_Log("PS4_PigletInit: loading piglet module from: %s\n", module_path);
+        pigletModId = sceKernelLoadStartModule(module_path, 0, NULL, 0, NULL, NULL);
+        if (pigletModId < 0) {
+            SDL_Log("PS4_PigletInit: could not piglet load module %s (0x%08x)\n", module_path, pigletModId);
+        }
     }
 
-    if (shaderCompilerPatchModule(PIGLET_MODULE_NAME, &pgl_patches_cb) != 0) {
-        sceKernelStopUnloadModule(modId, 0, NULL, 0, NULL, NULL);
-        modId = 0;
-        SDL_Log("PS4_SHACC_Init: unable to patch piglet module.\n");
-        return 1;
-    }
-
-    SDL_Log("PS4_SHACC_Init: Ok\n");
+    SDL_Log("PS4_PigletInit: Ok\n");
 
     return 0;
 }
 
-#endif // SDL_VIDEO_DRIVER_PS4
+void PS4_PigletExit() {
+    if (shaccModId > 0) {
+        sceKernelStopUnloadModule(shaccModId, 0, NULL, 0, NULL, NULL);
+    }
+    if (pigletModId > 0) {
+        sceKernelStopUnloadModule(pigletModId, 0, NULL, 0, NULL, NULL);
+    }
+}
+
+bool PS4_PigletShaccAvailable() {
+    return shaccModId > 0;
+}
+
+//#endif // SDL_VIDEO_DRIVER_PS4

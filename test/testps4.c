@@ -116,6 +116,9 @@ int main(int argc, char *argv[]) {
     // sceKernelDebugOutText
     SDL_LogSetOutputFunction((SDL_LogOutputFunction) &log_cb, NULL);
 
+    // load piglet and shacc modules from specified path (enable shader compiler)
+    //SDL_SetHint(SDL_HINT_PS4_PIGLET_MODULES_PATH, "/data/self/system/common/lib");
+
     // mandatory at least on switch, else gfx is not properly closed
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0) {
         SDL_Log("SDL_Init: %s\n", SDL_GetError());

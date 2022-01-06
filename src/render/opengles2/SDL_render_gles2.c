@@ -27,7 +27,8 @@
 #include "../SDL_sysrender.h"
 #include "../../video/SDL_blit.h"
 #include "SDL_shaders_gles2.h"
-#if SDL_VIDEO_DRIVER_PS4 && !SDL_VIDEO_DRIVER_PS4_SHACC
+#if SDL_VIDEO_DRIVER_PS4
+#include "../../video/ps4/SDL_ps4piglet.h"
 #include "../../video/ps4/SDL_ps4opengles_shaders.h"
 #endif
 
@@ -485,9 +486,14 @@ GLES2_CacheShader(GLES2_RenderData *data, GLES2_ShaderType type, GLenum shader_t
 {
     GLuint id;
     GLint compileSuccessful = GL_FALSE;
-#if SDL_VIDEO_DRIVER_PS4 && !SDL_VIDEO_DRIVER_PS4_SHACC
+#if SDL_VIDEO_DRIVER_PS4
     int binary_size;
-    const Uint8 *shader_src = PS4GLES2_GetShaderBinary(type, &binary_size);
+    const Uint8 *shader_src;
+    if(PS4_PigletShaccAvailable()) {
+        shader_src = GLES2_GetShader(type);
+    } else {
+        shader_src = PS4GLES2_GetShaderBinary(type, &binary_size);
+    }
 #else
     const Uint8 *shader_src = GLES2_GetShader(type);
 #endif
@@ -499,8 +505,13 @@ GLES2_CacheShader(GLES2_RenderData *data, GLES2_ShaderType type, GLenum shader_t
 
     /* Compile */
     id = data->glCreateShader(shader_type);
-#if SDL_VIDEO_DRIVER_PS4 && !SDL_VIDEO_DRIVER_PS4_SHACC
-    glShaderBinary(1, &id, 0, (const void *) shader_src, binary_size);
+#if SDL_VIDEO_DRIVER_PS4
+    if(PS4_PigletShaccAvailable()) {
+        data->glShaderSource(id, 1, (const char**)&shader_src, NULL);
+        data->glCompileShader(id);
+    } else {
+        glShaderBinary(1, &id, 0, (const void *) shader_src, binary_size);
+    }
 #else
     data->glShaderSource(id, 1, (const char**)&shader_src, NULL);
     data->glCompileShader(id);

@@ -2410,10 +2410,6 @@ elseif (PS4)
   list(APPEND EXTRA_LIBS
           SceSystemService SceSysUtil SceSysmodule
           SceUserService SceAudioOut ScePad ScePigletv2VSH)
-  # shader compiler
-  if(SDL_VIDEO_DRIVER_PS4_SHACC)
-    list(APPEND EXTRA_CFLAGS "-DSDL_VIDEO_DRIVER_PS4_SHACC")
-  endif()
   CheckPTHREAD()
 endif()
 
