@@ -32,6 +32,8 @@
 typedef struct SDL_WindowData
 {
     EGLSurface egl_surface;
+    Uint64 vsync_start, vsync_end, vsync_wait;
+    float vsync_elapsed;
 } SDL_WindowData;
 
 int PS4_VideoInit(_THIS);

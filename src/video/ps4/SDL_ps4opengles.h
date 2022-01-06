@@ -41,7 +41,6 @@ extern SDL_GLContext PS4_GLES_CreateContext(_THIS, SDL_Window *window);
 extern int PS4_GLES_SwapWindow(_THIS, SDL_Window *window);
 extern int PS4_GLES_MakeCurrent(_THIS, SDL_Window *window, SDL_GLContext context);
 extern void PS4_GLES_DefaultProfileConfig(_THIS, int *mask, int *major, int *minor);
-extern void PS4_GLES_GetDrawableSize(_THIS, SDL_Window *window, int *w, int *h);
 
 #endif /* SDL_VIDEO_DRIVER_PS4 */
 #endif /* __SDL_PS4OPENGLES_H__ */

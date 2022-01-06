@@ -38,6 +38,7 @@
 
 #include "SDL_ps4video.h"
 #include "SDL_ps4opengles.h"
+#include "SDL_timer.h"
 
 #if SDL_VIDEO_DRIVER_PS4_SHACC
 extern int PS4_SHACC_Init();
@@ -416,6 +417,16 @@ PS4_SetWindowGrab(_THIS, SDL_Window *window, SDL_bool grabbed) {
 
 void
 PS4_PumpEvents(_THIS) {
+
+#if SDL_VIDEO_DRIVER_PS4_VSYNC_FIX
+    // crappy vsync hack (eglSwapInterval bug?)
+    if (ps4_window != NULL) {
+        SDL_WindowData *data = (SDL_WindowData *) ps4_window->driverdata;
+        if (data != NULL) {
+            data->vsync_start = SDL_GetPerformanceCounter();
+        }
+    }
+#endif
 
     // TODO
     /*
