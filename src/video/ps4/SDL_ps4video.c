@@ -49,6 +49,71 @@ static SDL_Window *ps4_window = NULL;
 static OrbisPglConfig ps4_pgl_config;
 static OrbisPglWindow ps4_egl_window;
 static uint32_t ps4_pgl_modId;
+static bool ps4_init_done = false;
+
+void
+PS4_LoadModules() {
+    char pgl_path[256];
+    uint32_t ret;
+
+    if (ps4_init_done) {
+        return;
+    }
+
+    // load common modules
+    ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_SYSTEM_SERVICE);
+    if (ret != 0) {
+        SDL_Log("PS4_LoadModules: load module failed: SYSTEM_SERVICE (0x%08x)\n", ret);
+        return;
+    }
+
+    // load user module
+    ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_USER_SERVICE);
+    if (ret != 0) {
+        SDL_Log("PS4_LoadModules: load module failed: USER_SERVICE (0x%08x)\n", ret);
+        return;
+    }
+
+    // load pad module
+    ret = sceSysmoduleLoadModuleInternal(0x80000024);
+    if (ret != 0) {
+        SDL_Log("PS4_LoadModules: load module failed: PAD (0x%08x)\n", ret);
+        return;
+    }
+
+    // load audio module
+    ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_AUDIOOUT);
+    if (ret != 0) {
+        SDL_Log("PS4_LoadModules: load module failed: AUDIOOUT (0x%08x)\n", ret);
+    }
+
+    // initialize user service (used for pad and audio drivers)
+    OrbisUserServiceInitializeParams param;
+    param.priority = ORBIS_KERNEL_PRIO_FIFO_LOWEST;
+    ret = sceUserServiceInitialize(&param);
+    if (ret != 0) {
+        SDL_Log("PS4_LoadModules: sceUserServiceInitialize failed (0x%08x)\n", ret);
+        return;
+    }
+
+    // load piglet module
+    sprintf(pgl_path, "/%s/common/lib/libScePigletv2VSH.sprx", sceKernelGetFsSandboxRandomWord());
+    ps4_pgl_modId = sceKernelLoadStartModule(pgl_path, 0, NULL, 0, NULL, NULL);
+    if (ps4_pgl_modId < 0) {
+        SDL_Log("PS4_LoadModules: could not load piglet module (0x%08x)\n", ps4_pgl_modId);
+        return;
+    }
+
+#if SDL_VIDEO_DRIVER_PS4_SHACC
+    // load shader compiler module
+    PS4_SHACC_Init();
+#endif
+
+    // hide splash screen (is this mandatory ?)
+    sceSystemServiceHideSplashScreen();
+
+    ps4_init_done = true;
+}
 
 static void
 PS4_Destroy(SDL_VideoDevice *device) {
@@ -75,8 +140,6 @@ PS4_CreateDevice(int devindex) {
     SDL_Log("PS4_CreateDevice\n");
 
     SDL_VideoDevice *device;
-    char pgl_path[256];
-    uint32_t ret;
 
     /* Initialize SDL_VideoDevice structure */
     device = (SDL_VideoDevice *) SDL_calloc(1, sizeof(SDL_VideoDevice));
@@ -85,44 +148,8 @@ PS4_CreateDevice(int devindex) {
         return NULL;
     }
 
-    // load common modules
-    ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_SYSTEM_SERVICE);
-    if (ret != 0) {
-        SDL_Log("PS4_CreateDevice: load module failed: SYSTEM_SERVICE (0x%08x)\n", ret);
-        return NULL;
-    }
-
-    // load user module
-    ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_USER_SERVICE);
-    if (ret != 0) {
-        SDL_Log("PS4_JoystickInit: load module failed: USER_SERVICE (0x%08x)\n", ret);
-        return NULL;
-    }
-
-    // initialize user service (used for pad and audio drivers)
-    OrbisUserServiceInitializeParams param;
-    param.priority = ORBIS_KERNEL_PRIO_FIFO_LOWEST;
-    ret = sceUserServiceInitialize(&param);
-    if (ret != 0) {
-        SDL_Log("PS4_JoystickInit: sceUserServiceInitialize failed (0x%08x)\n", ret);
-        return NULL;
-    }
-
-    // load piglet module
-    sprintf(pgl_path, "/%s/common/lib/libScePigletv2VSH.sprx", sceKernelGetFsSandboxRandomWord());
-    ps4_pgl_modId = sceKernelLoadStartModule(pgl_path, 0, NULL, 0, NULL, NULL);
-    if (ps4_pgl_modId < 0) {
-        SDL_Log("PS4_CreateDevice: could not load piglet module (0x%08x)\n", ps4_pgl_modId);
-        return NULL;
-    }
-
-#if SDL_VIDEO_DRIVER_PS4_SHACC
-    // load shader compiler module
-    PS4_SHACC_Init();
-#endif
-
-    // hide splash screen (is this mandatory ?)
-    sceSystemServiceHideSplashScreen();
+    // initialize modules if not already done
+    PS4_LoadModules();
 
     /* Setup amount of available displays */
     device->num_displays = 0;

@@ -23,7 +23,6 @@
 #if SDL_JOYSTICK_PS4
 
 /* This is the PS4 implementation of the SDL joystick API */
-#include <orbis/Sysmodule.h>
 #include <orbis/UserService.h>
 #include <orbis/Pad.h>
 
@@ -34,6 +33,8 @@
 #define ORBIS_USER_SERVICE_USER_ID_INVALID 0xFFFFFFFF
 #define ORBIS_PAD_ERROR_ALREADY_OPENED 0x80920004
 #define ORBIS_PAD_ERROR_DEVICE_NOT_CONNECTED 0x80920007
+
+extern void PS4_LoadModules();
 
 /* Current pad state */
 static OrbisPadData pads[ORBIS_USER_SERVICE_MAX_LOGIN_USERS];
@@ -133,11 +134,8 @@ int PS4_JoystickInit(void) {
     int i;
     uint32_t ret;
 
-    // load pad module
-    ret = sceSysmoduleLoadModuleInternal(0x80000024);
-    if (ret != 0) {
-        return SDL_SetError("PS4_JoystickInit: load module failed: PAD (0x%08x)\n", ret);
-    }
+    // initialize modules if not already done
+    PS4_LoadModules();
 
     ret = scePadInit();
     if (ret != 0) {

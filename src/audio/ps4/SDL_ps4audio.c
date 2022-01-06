@@ -32,7 +32,8 @@
 #include "SDL_ps4audio.h"
 
 #include <orbis/AudioOut.h>
-#include <orbis/Sysmodule.h>
+
+extern void PS4_LoadModules();
 
 inline static Uint16
 ps4_sample_size(Uint16 size) {
@@ -158,11 +159,8 @@ PS4AUD_Init(SDL_AudioDriverImpl *impl) {
 
     uint32_t ret;
 
-    // load audio module
-    ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_AUDIOOUT);
-    if (ret != 0) {
-        return SDL_SetError("PS4AUD_Init: load module failed: AUDIOOUT (0x%08x)\n", ret);
-    }
+    // initialize modules if not already done
+    PS4_LoadModules();
 
     ret = sceAudioOutInit();
     if (ret != 0) {
