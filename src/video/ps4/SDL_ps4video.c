@@ -427,16 +427,6 @@ PS4_SetWindowGrab(_THIS, SDL_Window *window, SDL_bool grabbed) {
 void
 PS4_PumpEvents(_THIS) {
 
-#if SDL_VIDEO_DRIVER_PS4_VSYNC_FIX
-    // crappy vsync hack (eglSwapInterval bug?)
-    if (ps4_window != NULL) {
-        SDL_WindowData *data = (SDL_WindowData *) ps4_window->driverdata;
-        if (data != NULL) {
-            data->vsync_start = SDL_GetPerformanceCounter();
-        }
-    }
-#endif
-
     // TODO
     /*
     // we don't want other inputs overlapping with software keyboard
