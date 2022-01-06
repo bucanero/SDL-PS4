@@ -59,25 +59,25 @@ PS4_LoadModules() {
     // load common modules
     ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_SYSTEM_SERVICE);
     if (ret != 0) {
-        return SDL_SetError("PS4_LoadModules: load module failed: SYSTEM_SERVICE (0x%08x)\n", ret);
+        return SDL_SetError("PS4_LoadModules: load module failed: SYSTEM_SERVICE (0x%08x)", ret);
     }
 
     // load user module
     ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_USER_SERVICE);
     if (ret != 0) {
-        return SDL_SetError("PS4_LoadModules: load module failed: USER_SERVICE (0x%08x)\n", ret);
+        return SDL_SetError("PS4_LoadModules: load module failed: USER_SERVICE (0x%08x)", ret);
     }
 
     // load pad module
     ret = sceSysmoduleLoadModuleInternal(0x80000024);
     if (ret != 0) {
-        return SDL_SetError("PS4_LoadModules: load module failed: PAD (0x%08x)\n", ret);
+        return SDL_SetError("PS4_LoadModules: load module failed: PAD (0x%08x)", ret);
     }
 
     // load audio module
     ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_AUDIOOUT);
     if (ret != 0) {
-        return SDL_SetError("PS4_LoadModules: load module failed: AUDIOOUT (0x%08x)\n", ret);
+        return SDL_SetError("PS4_LoadModules: load module failed: AUDIOOUT (0x%08x)", ret);
     }
 
     // initialize user service (used for pad and audio drivers)
@@ -85,11 +85,8 @@ PS4_LoadModules() {
     param.priority = ORBIS_KERNEL_PRIO_FIFO_LOWEST;
     ret = sceUserServiceInitialize(&param);
     if (ret != 0) {
-        return SDL_SetError("PS4_LoadModules: sceUserServiceInitialize failed (0x%08x)\n", ret);
+        return SDL_SetError("PS4_LoadModules: sceUserServiceInitialize failed (0x%08x)", ret);
     }
-
-    // load piglet
-    PS4_PigletInit();
 
     // hide splash screen (is this mandatory ?)
     sceSystemServiceHideSplashScreen();
@@ -127,7 +124,14 @@ PS4_CreateDevice(int devindex) {
     }
 
     // initialize modules if not already done
-    PS4_LoadModules();
+    if (PS4_LoadModules() != 0) {
+        return NULL;
+    }
+
+    // load piglet
+    if (PS4_PigletInit() != 0) {
+        return NULL;
+    }
 
     /* Setup amount of available displays */
     device->num_displays = 0;

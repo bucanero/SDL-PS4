@@ -169,6 +169,7 @@ int PS4_PigletInit() {
         pigletModId = sceKernelLoadStartModule(module_path, 0, NULL, 0, NULL, NULL);
         if (pigletModId < 0) {
             SDL_Log("PS4_PigletInit: could not piglet load module %s (0x%08x)\n", module_path, pigletModId);
+            return 1;
         }
     }
 
