@@ -47,11 +47,12 @@ ps4_sample_size(Uint16 size) {
     return 256;
 }
 
+static uint32_t ps4_sceAudioOutInited = -1;
+
 static int
 PS4AUD_OpenDevice(_THIS, void *handle, const char *devname, int iscapture) {
-    int mixlen, i;
+    size_t mix_len, i;
     uint8_t fmt;
-    //TODO: int vols[2] = {SCE_AUDIO_MAX_VOLUME, SCE_AUDIO_MAX_VOLUME};
 
     this->hidden = (struct SDL_PrivateAudioData *) SDL_malloc(sizeof(*this->hidden));
     if (this->hidden == NULL) {
@@ -82,8 +83,8 @@ PS4AUD_OpenDevice(_THIS, void *handle, const char *devname, int iscapture) {
     /* Allocate the mixing buffer.  Its size and starting address must
        be a multiple of 64 bytes.  Our sample count is already a multiple of
        64, so spec->size should be a multiple of 64 as well. */
-    mixlen = this->spec.size * NUM_BUFFERS;
-    this->hidden->rawbuf = (Uint8 *) memalign(64, mixlen);
+    mix_len = this->spec.size * NUM_BUFFERS;
+    this->hidden->rawbuf = (Uint8 *) memalign(64, mix_len);
     if (this->hidden->rawbuf == NULL) {
         return SDL_SetError("PS4AUD_OpenDevice: couldn't allocate mix buffer");
     }
@@ -96,14 +97,13 @@ PS4AUD_OpenDevice(_THIS, void *handle, const char *devname, int iscapture) {
         return SDL_SetError("PS4AUD_OpenDevice: sceAudioOutOpen failed (0x%08x)", this->hidden->aout);
     }
 
-    //TODO: sceAudioOutSetVolume(this->hidden->aout, SCE_AUDIO_VOLUME_FLAG_L_CH | SCE_AUDIO_VOLUME_FLAG_R_CH, vols);
-
-    SDL_memset(this->hidden->rawbuf, 0, mixlen);
+    SDL_memset(this->hidden->rawbuf, 0, mix_len);
     for (i = 0; i < NUM_BUFFERS; i++) {
         this->hidden->mixbufs[i] = &this->hidden->rawbuf[i * this->spec.size];
     }
 
     this->hidden->next_buffer = 0;
+
     return 0;
 }
 
@@ -115,8 +115,7 @@ static void PS4AUD_PlayDevice(_THIS) {
 
 /* This function waits until it is possible to write a full sound buffer */
 static void PS4AUD_WaitDevice(_THIS) {
-    // TODO: verify if needed
-    //sceAudioOutOutput(this->hidden->aout, NULL);
+    sceAudioOutOutput(this->hidden->aout, NULL);
 }
 
 static Uint8 *PS4AUD_GetDeviceBuf(_THIS) {
@@ -124,8 +123,12 @@ static Uint8 *PS4AUD_GetDeviceBuf(_THIS) {
 }
 
 static void PS4AUD_CloseDevice(_THIS) {
+    int res;
     if (this->hidden->aout > 0) {
-        sceAudioOutClose(this->hidden->aout);
+        res = sceAudioOutClose(this->hidden->aout);
+        if (res != 0) {
+            SDL_Log("PS4AUD_CloseDevice: sceAudioOutClose failed (0x%08x)\n", res);
+        }
         this->hidden->aout = -1;
     }
 
@@ -143,28 +146,28 @@ static void PS4AUD_ThreadInit(_THIS) {
     tid = scePthreadSelf();
     ret = scePthreadGetprio(tid, &priority);
     if (ret != 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_AUDIO,
-                     "PS4AUD_ThreadInit: scePthreadGetprio failed (0x%08x)\n", ret);
+        SDL_Log("PS4AUD_ThreadInit: scePthreadGetprio failed (0x%08x)\n", ret);
     }
 
     ret = scePthreadSetprio(tid, priority - 1);
     if (ret != 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_AUDIO,
-                     "PS4AUD_ThreadInit: scePthreadSetprio failed (0x%08x)\n", ret);
+        SDL_Log("PS4AUD_ThreadInit: scePthreadSetprio failed (0x%08x)\n", ret);
     }
 }
 
 static int
 PS4AUD_Init(SDL_AudioDriverImpl *impl) {
 
-    uint32_t ret;
-
     // initialize modules if not already done
     PS4_LoadModules();
 
-    ret = sceAudioOutInit();
-    if (ret != 0) {
-        return SDL_SetError("PS4AUD_Init: sceAudioOutInit failed (0x%08x)\n", ret);
+    // sceAudioOutInit should only be called once (do we miss a "sceAudioOutExit"?)
+    if (ps4_sceAudioOutInited != 0) {
+        ps4_sceAudioOutInited = sceAudioOutInit();
+        if (ps4_sceAudioOutInited != 0) {
+            SDL_Log("PS4AUD_OpenDevice: sceAudioOutInit failed (0x%08x)\n", ps4_sceAudioOutInited);
+            return SDL_SetError("PS4AUD_OpenDevice: sceAudioOutInit failed (0x%08x)\n", ps4_sceAudioOutInited);
+        }
     }
 
     /* Set the function pointers */
