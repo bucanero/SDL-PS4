@@ -29,8 +29,6 @@
 #include "../SDL_egl_c.h"
 
 /* OpenGLES functions */
-#define PS4_GLES_GetAttribute SDL_EGL_GetAttribute
-#define PS4_GLES_GetProcAddress SDL_EGL_GetProcAddress
 #define PS4_GLES_UnloadLibrary SDL_EGL_UnloadLibrary
 #define PS4_GLES_SetSwapInterval SDL_EGL_SetSwapInterval
 #define PS4_GLES_GetSwapInterval SDL_EGL_GetSwapInterval
@@ -41,6 +39,7 @@ extern SDL_GLContext PS4_GLES_CreateContext(_THIS, SDL_Window *window);
 extern int PS4_GLES_SwapWindow(_THIS, SDL_Window *window);
 extern int PS4_GLES_MakeCurrent(_THIS, SDL_Window *window, SDL_GLContext context);
 extern void PS4_GLES_DefaultProfileConfig(_THIS, int *mask, int *major, int *minor);
+extern void *PS4_GLES_GetProcAddress(_THIS, const char *proc);
 
 #endif /* SDL_VIDEO_DRIVER_PS4 */
 #endif /* __SDL_PS4OPENGLES_H__ */

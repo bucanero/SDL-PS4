@@ -247,7 +247,7 @@ SDL_EGL_GetProcAddress(_THIS, const char *proc)
         retval = _this->egl_data->eglGetProcAddress(proc);
     }
 
-    #if !defined(__EMSCRIPTEN__) && !defined(SDL_VIDEO_DRIVER_VITA)  /* LoadFunction isn't needed on Emscripten and will call dlsym(), causing other problems. */
+    #if !defined(__EMSCRIPTEN__) && !defined(SDL_VIDEO_DRIVER_VITA) && !defined(SDL_VIDEO_DRIVER_PS4)  /* LoadFunction isn't needed on Emscripten and will call dlsym(), causing other problems. */
     /* Try SDL_LoadFunction() first for EGL <= 1.4, or as a fallback for >= 1.5. */
     if (!retval) {
         static char procname[64];
@@ -432,7 +432,7 @@ SDL_EGL_LoadLibraryOnly(_THIS, const char *egl_path)
 #endif
 
     _this->egl_data->dll_handle = dll_handle;
-#if SDL_VIDEO_DRIVER_VITA
+#if SDL_VIDEO_DRIVER_VITA || defined(SDL_VIDEO_DRIVER_PS4)
     _this->egl_data->egl_dll_handle = egl_dll_handle;
 #endif
 

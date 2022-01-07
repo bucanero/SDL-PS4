@@ -23,11 +23,14 @@
 
 #if SDL_VIDEO_DRIVER_PS4
 
+#include <orbis/libkernel.h>
 #include "SDL_video.h"
 #include "SDL_ps4opengles.h"
 #include "SDL_ps4video.h"
 
 /* EGL implementation of SDL OpenGL support */
+
+extern uint32_t PS4_PigletModId;
 
 void
 PS4_GLES_DefaultProfileConfig(_THIS, int *mask, int *major, int *minor) {
@@ -41,8 +44,23 @@ PS4_GLES_LoadLibrary(_THIS, const char *path) {
     return SDL_EGL_LoadLibrary(_this, path, EGL_DEFAULT_DISPLAY, 0);
 }
 
+void *
+PS4_GLES_GetProcAddress(_THIS, const char *proc) {
+    void *ptr = NULL;
+    int res;
+
+    res = sceKernelDlsym((int) PS4_PigletModId, proc, (void **) &ptr);
+    if (res != 0) {
+        SDL_Log("PS4_GLES_GetProcAddress: sceKernelDlsym failed: 0x%08x (%s == %p)\n", res, proc, ptr);
+    }
+
+    return ptr;
+}
+
 SDL_EGL_CreateContext_impl(PS4)
+
 SDL_EGL_MakeCurrent_impl(PS4)
+
 SDL_EGL_SwapWindow_impl(PS4)
 
 #endif /* SDL_VIDEO_DRIVER_PS4 */

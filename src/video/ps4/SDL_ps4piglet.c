@@ -19,8 +19,8 @@
 
 typedef void module_patch_cb_t(uint8_t *base);
 
+uint32_t PS4_PigletModId;
 static uint32_t shaccModId;
-static uint32_t pigletModId;
 
 /* XXX: patches below are given for Piglet module from 4.74 Devkit PUP */
 static void pgl_patches_cb(uint8_t *base) {
@@ -145,9 +145,9 @@ int PS4_PigletInit() {
     if (path) {
         snprintf(module_path, 511, "%s/%s", path, PIGLET_MODULE_NAME);
         SDL_Log("PS4_PigletInit: loading piglet module from: %s\n", module_path);
-        pigletModId = sceKernelLoadStartModule(module_path, 0, NULL, 0, NULL, NULL);
-        if (pigletModId < 0) {
-            SDL_Log("PS4_PigletInit: could not piglet load module %s (0x%08x)\n", module_path, pigletModId);
+        PS4_PigletModId = sceKernelLoadStartModule(module_path, 0, NULL, 0, NULL, NULL);
+        if (PS4_PigletModId < 0) {
+            SDL_Log("PS4_PigletInit: could not piglet load module %s (0x%08x)\n", module_path, PS4_PigletModId);
             return 1;
         }
         snprintf(module_path, 511, "%s/%s", path, SHACC_MODULE_NAME);
@@ -166,9 +166,9 @@ int PS4_PigletInit() {
     } else {
         snprintf(module_path, 511, "/%s/common/lib/libScePigletv2VSH.sprx", sceKernelGetFsSandboxRandomWord());
         SDL_Log("PS4_PigletInit: loading piglet module from: %s\n", module_path);
-        pigletModId = sceKernelLoadStartModule(module_path, 0, NULL, 0, NULL, NULL);
-        if (pigletModId < 0) {
-            SDL_Log("PS4_PigletInit: could not piglet load module %s (0x%08x)\n", module_path, pigletModId);
+        PS4_PigletModId = sceKernelLoadStartModule(module_path, 0, NULL, 0, NULL, NULL);
+        if (PS4_PigletModId < 0) {
+            SDL_Log("PS4_PigletInit: could not piglet load module %s (0x%08x)\n", module_path, PS4_PigletModId);
             return 1;
         }
     }
@@ -182,8 +182,8 @@ void PS4_PigletExit() {
     if (shaccModId > 0) {
         sceKernelStopUnloadModule(shaccModId, 0, NULL, 0, NULL, NULL);
     }
-    if (pigletModId > 0) {
-        sceKernelStopUnloadModule(pigletModId, 0, NULL, 0, NULL, NULL);
+    if (PS4_PigletModId > 0) {
+        sceKernelStopUnloadModule(PS4_PigletModId, 0, NULL, 0, NULL, NULL);
     }
 }
 
