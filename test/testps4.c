@@ -2,21 +2,12 @@
 // Created by cpasjuste on 30/12/2021.
 //
 
-#include <stdio.h>
-#include <orbis/libkernel.h> // for sceKernelDebugOutText
 #include "../include/SDL.h"
 
 SDL_DisplayMode modes[5];
 int mode_count = 0, current_mode = 0;
-char log_buffer[128];
 Uint8 *audio_pos;
 Uint32 audio_len;
-
-void *log_cb(void *userdata, int category, SDL_LogPriority priority, const char *message) {
-    snprintf(log_buffer, 127, "<== SDL2 ==> %s\n", message);
-    sceKernelDebugOutText(0, log_buffer);
-    return NULL;
-}
 
 void print_info(SDL_Window *window, SDL_Renderer *renderer) {
     int w, h;
@@ -112,9 +103,6 @@ int main(int argc, char *argv[]) {
     SDL_Window *window;
     SDL_Renderer *renderer;
     int done = 0, x = 0, w = 0, h = 0;
-
-    // sceKernelDebugOutText
-    SDL_LogSetOutputFunction((SDL_LogOutputFunction) &log_cb, NULL);
 
     // load piglet and shacc modules from specified path (enable shader compiler)
     //SDL_SetHint(SDL_HINT_PS4_PIGLET_MODULES_PATH, "/data/self/system/common/lib");

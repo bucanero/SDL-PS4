@@ -44,9 +44,16 @@
 
 /* Only one window supported */
 static SDL_Window *ps4_window = NULL;
-static OrbisPglConfig ps4_pgl_config;
 static OrbisPglWindow ps4_egl_window;
 static bool ps4_init_done = false;
+char log_buffer[1024];
+
+static void *
+PS4_logCb(void *userdata, int category, SDL_LogPriority priority, const char *message) {
+    snprintf(log_buffer, 1023, "<SDL2> %s\n", message);
+    sceKernelDebugOutText(0, log_buffer);
+    return NULL;
+}
 
 int
 PS4_LoadModules() {
@@ -115,6 +122,9 @@ PS4_CreateDevice(int devindex) {
     SDL_Log("PS4_CreateDevice\n");
 
     SDL_VideoDevice *device;
+
+    // log to kernel
+    SDL_LogSetOutputFunction((SDL_LogOutputFunction) &PS4_logCb, NULL);
 
     /* Initialize SDL_VideoDevice structure */
     device = (SDL_VideoDevice *) SDL_calloc(1, sizeof(SDL_VideoDevice));
@@ -260,12 +270,6 @@ PS4_SetDisplayMode(_THIS, SDL_VideoDisplay *display, SDL_DisplayMode *mode) {
         SDL_EGL_MakeCurrent(_this, NULL, NULL);
         SDL_EGL_DestroySurface(_this, data->egl_surface);
 
-        ps4_pgl_config.dbgPosCmd_0x40 = mode->w;
-        ps4_pgl_config.dbgPosCmd_0x44 = mode->h;
-        if (!scePigletSetConfigurationVSH(&ps4_pgl_config)) {
-            SDL_Log("PS4_SetDisplayMode: scePigletSetConfigurationVSH failed\n");
-            return SDL_SetError("PS4_SetDisplayMode: scePigletSetConfigurationVSH failed\n");
-        }
         ps4_egl_window.uWidth = mode->w;
         ps4_egl_window.uHeight = mode->h;
 
@@ -295,27 +299,9 @@ PS4_CreateWindow(_THIS, SDL_Window *window) {
         return SDL_OutOfMemory();
     }
 
-    SDL_memset(&ps4_pgl_config, 0, sizeof(ps4_pgl_config));
-    ps4_pgl_config.size = sizeof(ps4_pgl_config);
-    ps4_pgl_config.flags = ORBIS_PGL_FLAGS_USE_COMPOSITE_EXT | ORBIS_PGL_FLAGS_USE_FLEXIBLE_MEMORY | 0x60;
-    ps4_pgl_config.processOrder = 1;
-    ps4_pgl_config.systemSharedMemorySize = 250 * 1024 * 1024;
-    ps4_pgl_config.videoSharedMemorySize = 512 * 1024 * 1024;
-    ps4_pgl_config.maxMappedFlexibleMemory = 170 * 1024 * 1024;
-    ps4_pgl_config.drawCommandBufferSize = 1 * 1024 * 1024;
-    ps4_pgl_config.lcueResourceBufferSize = 1 * 1024 * 1024;
-    ps4_pgl_config.dbgPosCmd_0x40 = window->w;
-    ps4_pgl_config.dbgPosCmd_0x44 = window->h;
-    ps4_pgl_config.dbgPosCmd_0x48 = 0;
-    ps4_pgl_config.dbgPosCmd_0x4C = 0;
-    ps4_pgl_config.unk_0x5C = 2;
-
-    if (!scePigletSetConfigurationVSH(&ps4_pgl_config)) {
-        return SDL_SetError("scePigletSetConfigurationVSH failed\n");
-    }
-
     ps4_egl_window.uWidth = window->w;
     ps4_egl_window.uHeight = window->h;
+
     window_data->egl_surface = SDL_EGL_CreateSurface(_this, &ps4_egl_window);
     if (window_data->egl_surface == EGL_NO_SURFACE) {
         return SDL_SetError("could not create egl window surface");
@@ -382,12 +368,6 @@ PS4_SetWindowSize(_THIS, SDL_Window *window) {
         SDL_EGL_MakeCurrent(_this, NULL, NULL);
         SDL_EGL_DestroySurface(_this, data->egl_surface);
 
-        ps4_pgl_config.dbgPosCmd_0x40 = window->w;
-        ps4_pgl_config.dbgPosCmd_0x44 = window->h;
-        if (!scePigletSetConfigurationVSH(&ps4_pgl_config)) {
-            SDL_Log("PS4_SetWindowSize: scePigletSetConfigurationVSH failed\n");
-            return;
-        }
         ps4_egl_window.uWidth = window->w;
         ps4_egl_window.uHeight = window->h;
 

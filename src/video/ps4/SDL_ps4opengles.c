@@ -46,12 +46,13 @@ PS4_GLES_LoadLibrary(_THIS, const char *path) {
 
 void *
 PS4_GLES_GetProcAddress(_THIS, const char *proc) {
-    void *ptr = NULL;
+    void *ptr;
     int res;
 
     res = sceKernelDlsym((int) PS4_PigletModId, proc, (void **) &ptr);
     if (res != 0) {
         SDL_Log("PS4_GLES_GetProcAddress: sceKernelDlsym failed: 0x%08x (%s == %p)\n", res, proc, ptr);
+        return NULL;
     }
 
     return ptr;

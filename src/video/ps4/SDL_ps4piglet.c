@@ -4,8 +4,10 @@
 
 //#if SDL_VIDEO_DRIVER_PS4
 
-#include <orbis/libkernel.h>
+#include <stdbool.h>
 #include <sys/mman.h>
+#include <orbis/libkernel.h>
+#include <orbis/Pigletv2VSH.h>
 
 #include "../../SDL_internal.h"
 #include "SDL_hints.h"
@@ -21,6 +23,7 @@ typedef void module_patch_cb_t(uint8_t *base);
 
 uint32_t PS4_PigletModId;
 static uint32_t shaccModId;
+static OrbisPglConfig ps4_pgl_config;
 
 /* XXX: patches below are given for Piglet module from 4.74 Devkit PUP */
 static void pgl_patches_cb(uint8_t *base) {
@@ -171,6 +174,28 @@ int PS4_PigletInit() {
             SDL_Log("PS4_PigletInit: could not piglet load module %s (0x%08x)\n", module_path, PS4_PigletModId);
             return 1;
         }
+    }
+
+    SDL_memset(&ps4_pgl_config, 0, sizeof(ps4_pgl_config));
+    ps4_pgl_config.size = sizeof(ps4_pgl_config);
+    // 0x60 seems to disable vsync
+    //ps4_pgl_config.flags = ORBIS_PGL_FLAGS_USE_COMPOSITE_EXT | ORBIS_PGL_FLAGS_USE_FLEXIBLE_MEMORY | 0x60;
+    ps4_pgl_config.flags = ORBIS_PGL_FLAGS_USE_COMPOSITE_EXT | ORBIS_PGL_FLAGS_USE_FLEXIBLE_MEMORY;
+    ps4_pgl_config.processOrder = 1;
+    ps4_pgl_config.systemSharedMemorySize = ORBIS_PGL_MAX_SYS_SHARED_MEM;
+    ps4_pgl_config.videoSharedMemorySize = 256 * 1024 * 1024;
+    ps4_pgl_config.maxMappedFlexibleMemory = 128 * 1024 * 1024;
+    ps4_pgl_config.drawCommandBufferSize = 1 * 1024 * 1024;
+    ps4_pgl_config.lcueResourceBufferSize = 1 * 1024 * 1024;
+    ps4_pgl_config.dbgPosCmd_0x40 = 1920;
+    ps4_pgl_config.dbgPosCmd_0x44 = 1080;
+    ps4_pgl_config.dbgPosCmd_0x48 = 0;
+    ps4_pgl_config.dbgPosCmd_0x4C = 0;
+    ps4_pgl_config.unk_0x5C = 2;
+
+    if (!scePigletSetConfigurationVSH(&ps4_pgl_config)) {
+        SDL_Log("PS4_PigletInit: scePigletSetConfigurationVSH failed\n");
+        return 1;
     }
 
     SDL_Log("PS4_PigletInit: Ok\n");
