@@ -34,6 +34,20 @@
 #define ORBIS_PAD_ERROR_ALREADY_OPENED 0x80920004
 #define ORBIS_PAD_ERROR_DEVICE_NOT_CONNECTED 0x80920007
 
+// strange axis settings, but we want to reflect "Sony DualShock 4 V2" game controller mapping
+#define ORBIS_PAD_AXIS_LX   0
+#define ORBIS_PAD_AXIS_LY   1
+#define ORBIS_PAD_AXIS_RX   2
+#define ORBIS_PAD_AXIS_RY   5
+#define ORBIS_PAD_AXIS_L2   3
+#define ORBIS_PAD_AXIS_R2   4
+
+// TODO
+#define ORBIS_PAD_BUTTON_SHARE 0
+#define ORBIS_PAD_BUTTON_DUMMY 0
+// https://github.com/MasonLeeBack/RSEngine/blob/9ac4a0380898cb59a48d29dc7250dfb70430932f/src/Engine/Input/libScePad/RSScePad.cpp#L23
+// int scePadSetParticularMode(int enable); // enable use of SHARE and PS buttons
+
 extern void PS4_LoadModules();
 
 /* Current pad state */
@@ -42,24 +56,32 @@ static int pads_handles[ORBIS_USER_SERVICE_MAX_LOGIN_USERS]; // index: sdl joy n
 
 static int SDL_numjoysticks = 0;
 
+// "Sony DualShock 4 V2" buttons layout (with game controller mapping for information)
 static const unsigned int button_map[] = {
-        ORBIS_PAD_BUTTON_TRIANGLE,
-        ORBIS_PAD_BUTTON_CIRCLE,
-        ORBIS_PAD_BUTTON_CROSS,
-        ORBIS_PAD_BUTTON_SQUARE,
-        ORBIS_PAD_BUTTON_L1,
-        ORBIS_PAD_BUTTON_R1,
-        ORBIS_PAD_BUTTON_DOWN,
-        ORBIS_PAD_BUTTON_LEFT,
-        ORBIS_PAD_BUTTON_UP,
-        ORBIS_PAD_BUTTON_RIGHT,
-        ORBIS_PAD_BUTTON_L2,
-        ORBIS_PAD_BUTTON_R2,
-        ORBIS_PAD_BUTTON_L3,
-        ORBIS_PAD_BUTTON_R3
+        ORBIS_PAD_BUTTON_SQUARE,    // x:b0
+        ORBIS_PAD_BUTTON_CROSS,     // a:b1
+        ORBIS_PAD_BUTTON_CIRCLE,    // b:b2
+        ORBIS_PAD_BUTTON_TRIANGLE,  // y:b3
+        ORBIS_PAD_BUTTON_L1,        // leftshoulder:b4
+        ORBIS_PAD_BUTTON_R1,        // rightshoulder:b5
+        ORBIS_PAD_BUTTON_DUMMY,     // ??:b6 (unused in game controller db)
+        ORBIS_PAD_BUTTON_DUMMY,     // ??:b7 (unused in game controller db)
+        ORBIS_PAD_BUTTON_DUMMY,     // ??:b8 (unused in game controller db)
+        ORBIS_PAD_BUTTON_SHARE,     // start:b9
+        ORBIS_PAD_BUTTON_L3,        // leftstick:b10
+        ORBIS_PAD_BUTTON_R3,        // rightstick:b11
+        ORBIS_PAD_BUTTON_DUMMY,     // guide:b12
+        ORBIS_PAD_BUTTON_OPTIONS,   // back:b13
+        ORBIS_PAD_BUTTON_DOWN,      // used as analog input in game controller db
+        ORBIS_PAD_BUTTON_LEFT,      // used as analog input in game controller db
+        ORBIS_PAD_BUTTON_UP,        // used as analog input in game controller db
+        ORBIS_PAD_BUTTON_RIGHT,     // used as analog input in game controller db
+        ORBIS_PAD_BUTTON_L2,        // used as analog input in game controller db
+        ORBIS_PAD_BUTTON_R2         // used as analog input in game controller db
 };
 
-static int analog_map[256];  /* Map analog inputs to -32768 -> 32767 */
+/* Map analog inputs to -32768 -> 32767 */
+static int analog_map[256];
 
 typedef struct {
     int x;
@@ -108,6 +130,7 @@ void PS4_JoystickDetect() {
             continue;
         }
 
+        //scePadSetParticularMode(1);
         pad_handle = scePadOpen(users.userId[i], 0, 0, NULL);
         if (pad_handle == ORBIS_PAD_ERROR_DEVICE_NOT_CONNECTED) {
             //SDL_Log("PS4_JoystickDetect: scePadOpen(%i) == ORBIS_PAD_ERROR_DEVICE_NOT_CONNECTED\n", i);
@@ -190,7 +213,7 @@ PS4_JoystickSetDevicePlayerIndex(int device_index, int player_index) {
 int PS4_JoystickOpen(SDL_Joystick *joystick, int device_index) {
     joystick->nbuttons = SDL_arraysize(button_map);
     joystick->naxes = 6;
-    joystick->nhats = 0;
+    joystick->nhats = 1;
     joystick->instance_id = device_index;
 
     return 0;
@@ -205,7 +228,8 @@ static void PS4_JoystickUpdate(SDL_Joystick *joystick) {
     int i;
     unsigned int buttons;
     unsigned int changed;
-    unsigned char lx, ly, rx, ry, lt, rt;
+    unsigned char hat = 0;
+    unsigned char lx, ly, rx, ry, l2, r2;
     static unsigned int old_buttons[] = {0, 0, 0, 0};
     static unsigned char old_lx[] = {0, 0, 0, 0};
     static unsigned char old_ly[] = {0, 0, 0, 0};
@@ -235,34 +259,33 @@ static void PS4_JoystickUpdate(SDL_Joystick *joystick) {
     ly = pad.leftStick.y;
     rx = pad.rightStick.x;
     ry = pad.rightStick.y;
-    lt = pad.analogButtons.l2;
-    rt = pad.analogButtons.r2;
+    l2 = pad.analogButtons.l2;
+    r2 = pad.analogButtons.r2;
 
     // Axes
     if (old_lx[index] != lx) {
-        SDL_PrivateJoystickAxis(joystick, 0, analog_map[lx]);
+        SDL_PrivateJoystickAxis(joystick, ORBIS_PAD_AXIS_LX, analog_map[lx]);
         old_lx[index] = lx;
     }
     if (old_ly[index] != ly) {
-        SDL_PrivateJoystickAxis(joystick, 1, analog_map[ly]);
+        SDL_PrivateJoystickAxis(joystick, ORBIS_PAD_AXIS_LY, analog_map[ly]);
         old_ly[index] = ly;
     }
     if (old_rx[index] != rx) {
-        SDL_PrivateJoystickAxis(joystick, 2, analog_map[rx]);
+        SDL_PrivateJoystickAxis(joystick, ORBIS_PAD_AXIS_RX, analog_map[rx]);
         old_rx[index] = rx;
     }
     if (old_ry[index] != ry) {
-        SDL_PrivateJoystickAxis(joystick, 3, analog_map[ry]);
+        SDL_PrivateJoystickAxis(joystick, ORBIS_PAD_AXIS_RY, analog_map[ry]);
         old_ry[index] = ry;
     }
-
-    if (old_lt[index] != lt) {
-        SDL_PrivateJoystickAxis(joystick, 4, analog_map[lt]);
-        old_lt[index] = lt;
+    if (old_lt[index] != l2) {
+        SDL_PrivateJoystickAxis(joystick, ORBIS_PAD_AXIS_L2, analog_map[l2]);
+        old_lt[index] = l2;
     }
-    if (old_rt[index] != rt) {
-        SDL_PrivateJoystickAxis(joystick, 5, analog_map[rt]);
-        old_rt[index] = rt;
+    if (old_rt[index] != r2) {
+        SDL_PrivateJoystickAxis(joystick, ORBIS_PAD_AXIS_R2, analog_map[r2]);
+        old_rt[index] = r2;
     }
 
     // Buttons
@@ -274,8 +297,19 @@ static void PS4_JoystickUpdate(SDL_Joystick *joystick) {
             if (changed & button_map[i]) {
                 SDL_PrivateJoystickButton(
                         joystick, i, (buttons & button_map[i]) ? SDL_PRESSED : SDL_RELEASED);
+                // handle hat
+                if (i == 14) {
+                    hat |= SDL_HAT_DOWN;
+                } else if (i == 15) {
+                    hat |= SDL_HAT_LEFT;
+                } else if (i == 16) {
+                    hat |= SDL_HAT_UP;
+                } else if (i == 17) {
+                    hat |= SDL_HAT_RIGHT;
+                }
             }
         }
+        SDL_PrivateJoystickHat(joystick, 0, hat);
     }
 }
 
