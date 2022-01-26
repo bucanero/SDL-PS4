@@ -392,7 +392,50 @@ PS4_JoystickSetSensorsEnabled(SDL_Joystick *joystick, SDL_bool enabled) {
 
 static SDL_bool
 PS4_JoystickGetGamepadMapping(int device_index, SDL_GamepadMapping *out) {
-    return SDL_FALSE;
+    out->a.kind = EMappingKind_Button;
+    out->a.target = 1;
+    out->b.kind = EMappingKind_Button;
+    out->b.target = 2;
+    out->x.kind = EMappingKind_Button;
+    out->x.target = 0;
+    out->y.kind = EMappingKind_Button;
+    out->y.target = 3;
+    out->back.kind = EMappingKind_Button;
+    out->back.target = 13;
+    //out->guide.kind = EMappingKind_Button;
+    //out->guide.target = 0;
+    out->start.kind = EMappingKind_Button;
+    out->start.target = 9;
+    out->leftstick.kind = EMappingKind_Button;
+    out->leftstick.target = 10;
+    out->rightstick.kind = EMappingKind_Button;
+    out->rightstick.target = 10;
+    out->leftshoulder.kind = EMappingKind_Button;
+    out->leftshoulder.target = 4;
+    out->rightshoulder.kind = EMappingKind_Button;
+    out->rightshoulder.target = 5;
+    out->dpup.kind = EMappingKind_Button;
+    out->dpup.target = 16;
+    out->dpdown.kind = EMappingKind_Button;
+    out->dpdown.target = 14;
+    out->dpleft.kind = EMappingKind_Button;
+    out->dpleft.target = 15;
+    out->dpright.kind = EMappingKind_Button;
+    out->dpright.target = 17;
+    out->leftx.kind = EMappingKind_Axis;
+    out->leftx.target = ORBIS_PAD_AXIS_LX;
+    out->lefty.kind = EMappingKind_Axis;
+    out->lefty.target = ORBIS_PAD_AXIS_LY;
+    out->rightx.kind = EMappingKind_Axis;
+    out->rightx.target = ORBIS_PAD_AXIS_RX;
+    out->righty.kind = EMappingKind_Axis;
+    out->righty.target = ORBIS_PAD_AXIS_RY;
+    out->lefttrigger.kind = EMappingKind_Axis;
+    out->lefttrigger.target = ORBIS_PAD_AXIS_L2;
+    out->righttrigger.kind = EMappingKind_Axis;
+    out->righttrigger.target = ORBIS_PAD_AXIS_R2;
+
+    return SDL_TRUE;
 }
 
 SDL_JoystickDriver SDL_PS4_JoystickDriver = {

@@ -4,6 +4,8 @@
 
 #include "../include/SDL.h"
 
+int sceSystemServiceLoadExec(const char *path, const char *args[]);
+
 SDL_DisplayMode modes[5];
 int mode_count = 0, current_mode = 0;
 Uint8 *audio_pos;
@@ -54,7 +56,7 @@ void draw_rects(SDL_Renderer *renderer, int x, int y) {
 void audio_callback(void *userdata, Uint8 *stream, int len) {
     if (audio_len == 0)
         return;
-    len = (len > audio_len ? audio_len : len);
+    len = (int) (len > audio_len ? audio_len : len);
     SDL_memcpy(stream, audio_pos, len);
     audio_pos += len;
     audio_len -= len;
@@ -108,7 +110,7 @@ int main(int argc, char *argv[]) {
     //SDL_SetHint(SDL_HINT_PS4_PIGLET_MODULES_PATH, "/data/self/system/common/lib");
 
     // mandatory at least on switch, else gfx is not properly closed
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
         SDL_Log("SDL_Init: %s\n", SDL_GetError());
         return -1;
     }
@@ -152,45 +154,36 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < 1; i++) {
-        if (SDL_JoystickOpen(i) == NULL) {
-            SDL_Log("SDL_JoystickOpen: %s\n", SDL_GetError());
+        if (SDL_GameControllerOpen(i) == NULL) {
+            SDL_Log("SDL_GameControllerOpen(%i): %s\n", i, SDL_GetError());
         }
     }
 
     while (!done) {
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
-                case SDL_JOYAXISMOTION:
-                    SDL_Log("Joystick %d axis %d value: %d\n",
-                            event.jaxis.which,
-                            event.jaxis.axis, event.jaxis.value);
-                    break;
-                case SDL_JOYBUTTONDOWN:
-                    SDL_Log("Joystick %d button %d down\n",
-                            event.jbutton.which, event.jbutton.button);
-                    if (event.jbutton.which == 0) {
-                        if (event.jbutton.button == 0) {
-                            // joystick #0 down (/\)
-                            change_mode(window);
-                            print_info(window, renderer);
-                        } else if (event.jbutton.button == 2) {
-                            // joystick #0 down (X)
-                            if (w == 1920) {
-                                SDL_SetWindowSize(window, 1280, 720);
-                            } else {
-                                SDL_SetWindowSize(window, 1920, 1080);
-                            }
-                            print_info(window, renderer);
-                        } else if (event.jbutton.button == 3) {
-                            // joystick #0 down ([])
-                            audio_test();
-                        }
+                case SDL_CONTROLLERAXISMOTION:
+                    if (event.caxis.value < -20000 || event.caxis.value > 20000) {
+                        SDL_Log("axis: %s\n", SDL_GameControllerGetStringForAxis(event.caxis.axis));
                     }
-                    // joystick #0 down (O)
-                    if (event.jbutton.which == 0 && event.jbutton.button == 1) {
+                    break;
+                case SDL_CONTROLLERBUTTONDOWN:
+                    SDL_Log("button: %s\n", SDL_GameControllerGetStringForButton(event.cbutton.button));
+                    if (event.cbutton.button == SDL_CONTROLLER_BUTTON_BACK) {
                         done = 1;
+                    } else if (event.cbutton.button == SDL_CONTROLLER_BUTTON_Y) {   // TRIANGLE
+                        change_mode(window);
+                        print_info(window, renderer);
+                    } else if (event.cbutton.button == SDL_CONTROLLER_BUTTON_X) {   // SQUARE
+                        if (w == 1920) {
+                            SDL_SetWindowSize(window, 1280, 720);
+                        } else {
+                            SDL_SetWindowSize(window, 1920, 1080);
+                        }
+                        print_info(window, renderer);
+                    } else if (event.cbutton.button == SDL_CONTROLLER_BUTTON_B) {   // CIRCLE
+                        audio_test();
                     }
-                    break;
                 default:
                     break;
             }
@@ -219,6 +212,9 @@ int main(int argc, char *argv[]) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+
+    sceSystemServiceLoadExec((char *) "exit", NULL);
+    while (1) {}
 
     return 0;
 }
