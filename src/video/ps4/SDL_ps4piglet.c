@@ -178,19 +178,13 @@ int PS4_PigletInit() {
 
     SDL_memset(&ps4_pgl_config, 0, sizeof(ps4_pgl_config));
     ps4_pgl_config.size = sizeof(ps4_pgl_config);
-    // 0x60 seems to disable vsync
-    //ps4_pgl_config.flags = ORBIS_PGL_FLAGS_USE_COMPOSITE_EXT | ORBIS_PGL_FLAGS_USE_FLEXIBLE_MEMORY | 0x60;
-    ps4_pgl_config.flags = ORBIS_PGL_FLAGS_USE_COMPOSITE_EXT | ORBIS_PGL_FLAGS_USE_FLEXIBLE_MEMORY;
-    ps4_pgl_config.processOrder = 1;
-    ps4_pgl_config.systemSharedMemorySize = ORBIS_PGL_MAX_SYS_SHARED_MEM;
+    ps4_pgl_config.flags = 0;
+    ps4_pgl_config.systemSharedMemorySize = 256 * 1024 * 1024;
     ps4_pgl_config.videoSharedMemorySize = 256 * 1024 * 1024;
-    ps4_pgl_config.maxMappedFlexibleMemory = 128 * 1024 * 1024;
     ps4_pgl_config.drawCommandBufferSize = 1 * 1024 * 1024;
     ps4_pgl_config.lcueResourceBufferSize = 1 * 1024 * 1024;
     ps4_pgl_config.dbgPosCmd_0x40 = 1920;
     ps4_pgl_config.dbgPosCmd_0x44 = 1080;
-    ps4_pgl_config.dbgPosCmd_0x48 = 0;
-    ps4_pgl_config.dbgPosCmd_0x4C = 0;
     ps4_pgl_config.unk_0x5C = 2;
 
     if (!scePigletSetConfigurationVSH(&ps4_pgl_config)) {

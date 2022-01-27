@@ -23,8 +23,8 @@
 #if SDL_JOYSTICK_PS4
 
 /* This is the PS4 implementation of the SDL joystick API */
-#include <orbis/UserService.h>
 #include <orbis/Pad.h>
+#include <orbis/UserService.h>
 
 #include "../SDL_sysjoystick.h"
 #include "SDL_events.h"
@@ -34,19 +34,13 @@
 #define ORBIS_PAD_ERROR_ALREADY_OPENED 0x80920004
 #define ORBIS_PAD_ERROR_DEVICE_NOT_CONNECTED 0x80920007
 
-// strange axis settings, but we want to reflect "Sony DualShock 4 V2" game controller mapping
+#define ORBIS_PAD_BUTTON_DUMMY 0
 #define ORBIS_PAD_AXIS_LX   0
 #define ORBIS_PAD_AXIS_LY   1
 #define ORBIS_PAD_AXIS_RX   2
-#define ORBIS_PAD_AXIS_RY   5
-#define ORBIS_PAD_AXIS_L2   3
-#define ORBIS_PAD_AXIS_R2   4
-
-// TODO
-#define ORBIS_PAD_BUTTON_SHARE 0
-#define ORBIS_PAD_BUTTON_DUMMY 0
-// https://github.com/MasonLeeBack/RSEngine/blob/9ac4a0380898cb59a48d29dc7250dfb70430932f/src/Engine/Input/libScePad/RSScePad.cpp#L23
-// int scePadSetParticularMode(int enable); // enable use of SHARE and PS buttons
+#define ORBIS_PAD_AXIS_RY   3
+#define ORBIS_PAD_AXIS_L2   4
+#define ORBIS_PAD_AXIS_R2   5
 
 extern void PS4_LoadModules();
 
@@ -56,28 +50,25 @@ static int pads_handles[ORBIS_USER_SERVICE_MAX_LOGIN_USERS]; // index: sdl joy n
 
 static int SDL_numjoysticks = 0;
 
-// "Sony DualShock 4 V2" buttons layout (with game controller mapping for information)
+// "Sony DualShock 4 V2" buttons layout
 static const unsigned int button_map[] = {
-        ORBIS_PAD_BUTTON_SQUARE,    // x:b0
-        ORBIS_PAD_BUTTON_CROSS,     // a:b1
-        ORBIS_PAD_BUTTON_CIRCLE,    // b:b2
+        ORBIS_PAD_BUTTON_CROSS,     // a:b0
+        ORBIS_PAD_BUTTON_CIRCLE,    // b:b1
+        ORBIS_PAD_BUTTON_SQUARE,    // x:b2
         ORBIS_PAD_BUTTON_TRIANGLE,  // y:b3
-        ORBIS_PAD_BUTTON_L1,        // leftshoulder:b4
-        ORBIS_PAD_BUTTON_R1,        // rightshoulder:b5
-        ORBIS_PAD_BUTTON_DUMMY,     // ??:b6 (unused in game controller db)
-        ORBIS_PAD_BUTTON_DUMMY,     // ??:b7 (unused in game controller db)
-        ORBIS_PAD_BUTTON_DUMMY,     // ??:b8 (unused in game controller db)
-        ORBIS_PAD_BUTTON_SHARE,     // start:b9
-        ORBIS_PAD_BUTTON_L3,        // leftstick:b10
-        ORBIS_PAD_BUTTON_R3,        // rightstick:b11
-        ORBIS_PAD_BUTTON_DUMMY,     // guide:b12
-        ORBIS_PAD_BUTTON_OPTIONS,   // back:b13
-        ORBIS_PAD_BUTTON_DOWN,      // used as analog input in game controller db
-        ORBIS_PAD_BUTTON_LEFT,      // used as analog input in game controller db
-        ORBIS_PAD_BUTTON_UP,        // used as analog input in game controller db
-        ORBIS_PAD_BUTTON_RIGHT,     // used as analog input in game controller db
-        ORBIS_PAD_BUTTON_L2,        // used as analog input in game controller db
-        ORBIS_PAD_BUTTON_R2         // used as analog input in game controller db
+        ORBIS_PAD_BUTTON_OPTIONS,   // back:b4
+        ORBIS_PAD_BUTTON_DUMMY,     // guide:b5
+        ORBIS_PAD_BUTTON_TOUCH_PAD, // start:b6
+        ORBIS_PAD_BUTTON_L3,        // leftstick:b7
+        ORBIS_PAD_BUTTON_R3,        // rightstick:b8
+        ORBIS_PAD_BUTTON_L1,        // leftshoulder:b9
+        ORBIS_PAD_BUTTON_R1,        // rightshoulder:b10
+        ORBIS_PAD_BUTTON_UP,        // dpup:b11
+        ORBIS_PAD_BUTTON_DOWN,      // dpdown:b12
+        ORBIS_PAD_BUTTON_LEFT,      // dpleft:b13
+        ORBIS_PAD_BUTTON_RIGHT,     // dpright:b14
+        ORBIS_PAD_BUTTON_L2,        // lefttrigger:b15
+        ORBIS_PAD_BUTTON_R2         // righttrigger:b16
 };
 
 /* Map analog inputs to -32768 -> 32767 */
@@ -393,35 +384,35 @@ PS4_JoystickSetSensorsEnabled(SDL_Joystick *joystick, SDL_bool enabled) {
 static SDL_bool
 PS4_JoystickGetGamepadMapping(int device_index, SDL_GamepadMapping *out) {
     out->a.kind = EMappingKind_Button;
-    out->a.target = 1;
+    out->a.target = 0;
     out->b.kind = EMappingKind_Button;
-    out->b.target = 2;
+    out->b.target = 1;
     out->x.kind = EMappingKind_Button;
-    out->x.target = 0;
+    out->x.target = 2;
     out->y.kind = EMappingKind_Button;
     out->y.target = 3;
     out->back.kind = EMappingKind_Button;
-    out->back.target = 13;
+    out->back.target = 4;
     //out->guide.kind = EMappingKind_Button;
-    //out->guide.target = 0;
+    //out->guide.target = 5;
     out->start.kind = EMappingKind_Button;
-    out->start.target = 9;
+    out->start.target = 6;
     out->leftstick.kind = EMappingKind_Button;
-    out->leftstick.target = 10;
+    out->leftstick.target = 7;
     out->rightstick.kind = EMappingKind_Button;
-    out->rightstick.target = 10;
+    out->rightstick.target = 8;
     out->leftshoulder.kind = EMappingKind_Button;
-    out->leftshoulder.target = 4;
+    out->leftshoulder.target = 9;
     out->rightshoulder.kind = EMappingKind_Button;
-    out->rightshoulder.target = 5;
+    out->rightshoulder.target = 10;
     out->dpup.kind = EMappingKind_Button;
-    out->dpup.target = 16;
+    out->dpup.target = 11;
     out->dpdown.kind = EMappingKind_Button;
-    out->dpdown.target = 14;
+    out->dpdown.target = 12;
     out->dpleft.kind = EMappingKind_Button;
-    out->dpleft.target = 15;
+    out->dpleft.target = 13;
     out->dpright.kind = EMappingKind_Button;
-    out->dpright.target = 17;
+    out->dpright.target = 14;
     out->leftx.kind = EMappingKind_Axis;
     out->leftx.target = ORBIS_PAD_AXIS_LX;
     out->lefty.kind = EMappingKind_Axis;

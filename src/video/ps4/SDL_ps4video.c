@@ -76,7 +76,7 @@ PS4_LoadModules() {
     }
 
     // load pad module
-    ret = sceSysmoduleLoadModuleInternal(0x80000024);
+    ret = sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_PAD);
     if (ret != 0) {
         return SDL_SetError("PS4_LoadModules: load module failed: PAD (0x%08x)", ret);
     }
