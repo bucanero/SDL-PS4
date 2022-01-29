@@ -36,6 +36,8 @@
 #include "psp/SDL_systhread_c.h"
 #elif SDL_THREAD_VITA
 #include "vita/SDL_systhread_c.h"
+#elif SDL_THREAD_PS4
+#include "ps4/SDL_systhread_c.h"
 #elif SDL_THREAD_STDCPP
 #include "stdcpp/SDL_systhread_c.h"
 #elif SDL_THREAD_OS2

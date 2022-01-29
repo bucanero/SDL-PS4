@@ -336,8 +336,8 @@ endif()
 if (PS4 OR ORBIS)
   set(SDL_ATOMIC_ENABLED_BY_DEFAULT ON)
   set(SDL_SHARED_ENABLED_BY_DEFAULT OFF)
-  set(SDL_THREADS_ENABLED_BY_DEFAULT ON)
-  set(SDL_PTHREADS_ENABLED_BY_DEFAULT ON)
+  #set(SDL_THREADS_ENABLED_BY_DEFAULT ON)
+  #set(SDL_PTHREADS_ENABLED_BY_DEFAULT OFF)
   set(SDL_LOADSO_ENABLED_BY_DEFAULT OFF)
   set(SDL_DLOPEN_ENABLED_BY_DEFAULT OFF)
 endif ()
@@ -2391,6 +2391,16 @@ elseif (PS4)
     set(SOURCE_FILES ${SOURCE_FILES} ${TIMER_SOURCES})
     set(HAVE_SDL_TIMERS TRUE)
   endif ()
+  if(SDL_THREADS)
+    set(SDL_THREAD_PS4 1)
+    set(SOURCE_FILES ${SOURCE_FILES}
+            ${SDL2_SOURCE_DIR}/src/thread/ps4/SDL_sysmutex.c
+            ${SDL2_SOURCE_DIR}/src/thread/ps4/SDL_syssem.c
+            ${SDL2_SOURCE_DIR}/src/thread/ps4/SDL_systhread.c
+            ${SDL2_SOURCE_DIR}/src/thread/ps4/SDL_syscond.c
+            ${SDL2_SOURCE_DIR}/src/thread/generic/SDL_systls.c)
+    set(HAVE_SDL_THREADS TRUE)
+  endif()
   if (SDL_VIDEO)
     set(SDL_VIDEO_DRIVER_PS4 1)
     file(GLOB PS4_VIDEO_SOURCES

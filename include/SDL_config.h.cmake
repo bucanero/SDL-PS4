@@ -369,6 +369,7 @@
 #cmakedefine SDL_THREAD_WINDOWS @SDL_THREAD_WINDOWS@
 #cmakedefine SDL_THREAD_OS2 @SDL_THREAD_OS2@
 #cmakedefine SDL_THREAD_VITA @SDL_THREAD_VITA@
+#cmakedefine SDL_THREAD_PS4 @SDL_THREAD_PS4@
 
 /* Enable various timer systems */
 #cmakedefine SDL_TIMER_HAIKU @SDL_TIMER_HAIKU@

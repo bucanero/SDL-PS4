@@ -139,6 +139,7 @@ static void PS4AUD_CloseDevice(_THIS) {
 }
 
 static void PS4AUD_ThreadInit(_THIS) {
+#if 0
     /* Increase the priority of this audio thread by 1 to put it ahead of other SDL threads. */
     int priority, ret;
     OrbisPthread tid;
@@ -153,6 +154,7 @@ static void PS4AUD_ThreadInit(_THIS) {
     if (ret != 0) {
         SDL_Log("PS4AUD_ThreadInit: scePthreadSetprio failed (0x%08x)\n", ret);
     }
+#endif
 }
 
 static int
