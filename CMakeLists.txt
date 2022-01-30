@@ -2406,10 +2406,12 @@ elseif (PS4)
   endif ()
   set(SDL_STATIC_PIC ON)
   set(HAVE_CLOCK_GETTIME 1)
-  list(APPEND EXTRA_CFLAGS "-D__PS4__ -DSDL_VIDEO_STATIC_ANGLE")
+  list(APPEND EXTRA_CFLAGS "-D__PS4__ -DSDL_VIDEO_STATIC_ANGLE -DHAVE_LIBSAMPLERATE_H")
   list(APPEND EXTRA_LIBS
+          samplerate
           SceSystemService SceSysUtil SceSysmodule
-          SceUserService SceAudioOut ScePad ScePigletv2VSH)
+          SceUserService SceAudioOut ScePad ScePigletv2VSH
+          usermem SceLibcInternal)
   CheckPTHREAD()
 endif()
 

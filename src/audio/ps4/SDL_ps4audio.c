@@ -51,6 +51,8 @@ static uint32_t ps4_sceAudioOutInited = -1;
 
 static int
 PS4AUD_OpenDevice(_THIS, void *handle, const char *devname, int iscapture) {
+    SDL_bool supported_format = SDL_FALSE;
+    SDL_AudioFormat test_format;
     size_t mix_len, i;
     uint8_t fmt;
 
@@ -58,23 +60,29 @@ PS4AUD_OpenDevice(_THIS, void *handle, const char *devname, int iscapture) {
     if (this->hidden == NULL) {
         return SDL_OutOfMemory();
     }
-    SDL_memset(this->hidden, 0, sizeof(*this->hidden));
+    SDL_zerop(this->hidden);
 
-    switch (this->spec.format) {
-        case AUDIO_S16LSB:
+    test_format = SDL_FirstAudioFormat(this->spec.format);
+    while ((!supported_format) && (test_format)) {
+        if (test_format == AUDIO_S16LSB) {
+            supported_format = SDL_TRUE;
             fmt = (this->spec.channels == 1) ? ORBIS_AUDIO_OUT_PARAM_FORMAT_S16_MONO
                                              : ORBIS_AUDIO_OUT_PARAM_FORMAT_S16_STEREO;
-            break;
-        case AUDIO_F32LSB:
+        } else if (test_format == AUDIO_F32LSB) {
+            supported_format = SDL_TRUE;
             fmt = (this->spec.channels == 1) ? ORBIS_AUDIO_OUT_PARAM_FORMAT_FLOAT_MONO
                                              : ORBIS_AUDIO_OUT_PARAM_FORMAT_FLOAT_STEREO;
-            break;
-        default:
-            return SDL_SetError("PS4AUD_OpenDevice: unsupported audio format: 0x%08x", this->spec.format);
+        } else {
+            test_format = SDL_NextAudioFormat();
+        }
     }
 
+    if (!supported_format) {
+        return SDL_SetError("PS4AUD_OpenDevice: unsupported audio format: 0x%08x", test_format);
+    }
+
+    this->spec.format = test_format;
     this->spec.samples = ps4_sample_size(this->spec.samples);
-    // TODO: use libsamplerate
     this->spec.freq = 48000;
 
     /* Update the fragment size as size in bytes. */
