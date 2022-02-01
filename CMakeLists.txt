@@ -2406,12 +2406,15 @@ elseif (PS4)
   endif ()
   set(SDL_STATIC_PIC ON)
   set(HAVE_CLOCK_GETTIME 1)
+  set(SDL_LIBS "") # remove duplicate not working (for sdl2.pc) ?
+  set(EXTRA_LDFLAGS "") # remove duplicate not working (for sdl2.pc) ?
   list(APPEND EXTRA_CFLAGS "-D__PS4__ -DSDL_VIDEO_STATIC_ANGLE -DHAVE_LIBSAMPLERATE_H")
   list(APPEND EXTRA_LIBS
+          SDL2
           samplerate
           SceSystemService SceSysUtil SceSysmodule
           SceUserService SceAudioOut ScePad ScePigletv2VSH
-          usermem SceLibcInternal)
+          )
   CheckPTHREAD()
 endif()
 
@@ -2566,7 +2569,7 @@ Libs.private:")
   endif()
 
   # Clean up the different lists
-  if (VITA)
+  if (VITA OR PS4)
     listtostrrev(EXTRA_LIBS _EXTRA_LIBS "-l")
     set(SDL_STATIC_LIBS ${SDL_LIBS} ${EXTRA_LDFLAGS} ${_EXTRA_LIBS})
     list(REMOVE_DUPLICATES SDL_STATIC_LIBS)
