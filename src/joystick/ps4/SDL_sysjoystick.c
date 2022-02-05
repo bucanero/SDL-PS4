@@ -121,7 +121,6 @@ void PS4_JoystickDetect() {
             continue;
         }
 
-        //scePadSetParticularMode(1);
         pad_handle = scePadOpen(users.userId[i], 0, 0, NULL);
         if (pad_handle == ORBIS_PAD_ERROR_DEVICE_NOT_CONNECTED) {
             //SDL_Log("PS4_JoystickDetect: scePadOpen(%i) == ORBIS_PAD_ERROR_DEVICE_NOT_CONNECTED\n", i);
@@ -289,17 +288,18 @@ static void PS4_JoystickUpdate(SDL_Joystick *joystick) {
                 SDL_PrivateJoystickButton(
                         joystick, i, (buttons & button_map[i]) ? SDL_PRESSED : SDL_RELEASED);
                 // handle hat
-                if (i == 14) {
-                    hat |= SDL_HAT_DOWN;
-                } else if (i == 15) {
-                    hat |= SDL_HAT_LEFT;
-                } else if (i == 16) {
+                if (i == 11 && (buttons & button_map[i])) {
                     hat |= SDL_HAT_UP;
-                } else if (i == 17) {
+                } else if (i == 12 && (buttons & button_map[i])) {
+                    hat |= SDL_HAT_DOWN;
+                } else if (i == 13 && (buttons & button_map[i])) {
+                    hat |= SDL_HAT_LEFT;
+                } else if (i == 14 && (buttons & button_map[i])) {
                     hat |= SDL_HAT_RIGHT;
                 }
             }
         }
+        // send hat events now
         SDL_PrivateJoystickHat(joystick, 0, hat);
     }
 }
