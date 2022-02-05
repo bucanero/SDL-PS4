@@ -2842,6 +2842,7 @@ endif()
 
 if (PS4)
   add_executable(SDL2-ps4 test/testps4.c)
+  target_link_directories(SDL2-ps4 PRIVATE ${CMAKE_BINARY_DIR})
   target_link_libraries(SDL2-ps4 SDL2-static)
   add_dependencies(SDL2-ps4 SDL2-static)
   add_self(SDL2-ps4)
