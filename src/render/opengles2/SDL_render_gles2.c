@@ -1066,6 +1066,12 @@ GLES2_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *ver
     const int vboidx = data->current_vertex_buffer;
     const GLuint vbo = data->vertex_buffers[vboidx];
 
+#if SDL_VIDEO_DRIVER_PS4
+    if(!vertsize) {
+        return 0;
+    }
+#endif
+
     if (GLES2_ActivateRenderer(renderer) < 0) {
         return -1;
     }
@@ -1084,18 +1090,12 @@ GLES2_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, void *ver
 
     /* upload the new VBO data for this set of commands. */
     data->glBindBuffer(GL_ARRAY_BUFFER, vbo);
-#ifdef __PS4__
-    // TODO: fix glBufferSubData
-    data->glBufferData(GL_ARRAY_BUFFER, vertsize, vertices, GL_STREAM_DRAW);
-    data->vertex_buffer_size[vboidx] = vertsize;
-#else
     if (data->vertex_buffer_size[vboidx] < vertsize) {
         data->glBufferData(GL_ARRAY_BUFFER, vertsize, vertices, GL_STREAM_DRAW);
         data->vertex_buffer_size[vboidx] = vertsize;
     } else {
         data->glBufferSubData(GL_ARRAY_BUFFER, 0, vertsize, vertices);
     }
-#endif
 
     /* cycle through a few VBOs so the GL has some time with the data before we replace it. */
     data->current_vertex_buffer++;
