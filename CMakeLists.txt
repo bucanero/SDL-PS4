@@ -2408,10 +2408,9 @@ elseif (PS4)
   set(HAVE_CLOCK_GETTIME 0)
   set(SDL_LIBS "") # remove duplicate not working (for sdl2.pc) ?
   set(EXTRA_LDFLAGS "") # remove duplicate not working (for sdl2.pc) ?
-  list(APPEND EXTRA_CFLAGS "-D__PS4__ -DSDL_VIDEO_STATIC_ANGLE -DHAVE_LIBSAMPLERATE_H")
+  list(APPEND EXTRA_CFLAGS "-D__PS4__ -DSDL_VIDEO_STATIC_ANGLE")
   list(APPEND EXTRA_LIBS
           SDL2
-          samplerate
           SceSystemService SceSysUtil SceSysmodule
           SceUserService SceAudioOut ScePad ScePigletv2VSH
           )
