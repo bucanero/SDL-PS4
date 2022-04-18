@@ -2404,18 +2404,20 @@ elseif (PS4)
     set(SDL_VIDEO_RENDER_OGL_ES2 1)
     set(HAVE_OPENGLES TRUE)
   endif ()
+  set(SDL_LIBSAMPLERATE ON)
+  set(SDL_LIBSAMPLERATE_SHARED OFF)
   set(SDL_STATIC_PIC ON)
   set(HAVE_CLOCK_GETTIME 0)
   set(SDL_LIBS "") # remove duplicate not working (for sdl2.pc) ?
   set(EXTRA_LDFLAGS "") # remove duplicate not working (for sdl2.pc) ?
-  list(APPEND EXTRA_CFLAGS "-D__PS4__ -DSDL_VIDEO_STATIC_ANGLE -DHAVE_LIBSAMPLERATE_H")
+  list(APPEND EXTRA_CFLAGS "-D__PS4__ -DSDL_VIDEO_STATIC_ANGLE")
   list(APPEND EXTRA_LIBS
           SDL2
-          samplerate
           SceSystemService SceSysUtil SceSysmodule
           SceUserService SceAudioOut ScePad ScePigletv2VSH
           )
   CheckPTHREAD()
+  CheckLibSampleRate()
 endif()
 
 if(SDL_VULKAN AND NOT SDL_LOADSO)
