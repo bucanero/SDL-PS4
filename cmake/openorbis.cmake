@@ -22,7 +22,9 @@ set(TARGET x86_64-pc-freebsd-elf)
 set(CMAKE_SYSTEM_VERSION 12)
 set(CMAKE_CROSSCOMPILING 1)
 
-if (EXISTS "${OPENORBIS}/bin/clang")
+if (DEFINED ENV{PS4_TOOLCHAIN_BIN})
+    set(TOOLCHAIN_BIN $ENV{PS4_TOOLCHAIN_BIN}/bin/)
+elseif (EXISTS "${OPENORBIS}/bin/clang")
     set(TOOLCHAIN_BIN ${OPENORBIS}/bin/)
 endif ()
 
@@ -77,7 +79,7 @@ function(add_self project)
     set(AUTH_INFO "000000000000000000000000001C004000FF000000000080000000000000000000000000000000000000008000400040000000000000008000000000000000080040FFFF000000F000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
     add_custom_command(
             OUTPUT "${project}.self"
-            COMMAND ${CMAKE_COMMAND} -E env "OO_PS4_TOOLCHAIN=${OPENORBIS}" "${OPENORBIS}/bin/create-fself" "-in=${project}" "-out=${project}.oelf" "--eboot" "eboot.bin" "--paid" "0x3800000000000011" "--authinfo" "${AUTH_INFO}"
+            COMMAND ${CMAKE_COMMAND} -E env "OO_PS4_TOOLCHAIN=${OPENORBIS}" "${TOOLCHAIN_BIN}create-fself" "-in=${project}" "-out=${project}.oelf" "--eboot" "eboot.bin" "--paid" "0x3800000000000035" "--authinfo" "${AUTH_INFO}"
             VERBATIM
             DEPENDS "${project}"
     )
@@ -86,4 +88,3 @@ function(add_self project)
             DEPENDS "${project}.self"
     )
 endfunction()
-
