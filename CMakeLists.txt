@@ -2833,20 +2833,20 @@ endif()
 ##### Tests #####
 
 if(SDL_TEST)
-  include_directories(BEFORE "${SDL2_BINARY_DIR}/include")
-  include_directories(AFTER "${SDL2_SOURCE_DIR}/include")
-  file(GLOB TEST_SOURCES ${SDL2_SOURCE_DIR}/src/test/*.c)
-  add_library(SDL2_test STATIC ${TEST_SOURCES})
-  add_subdirectory(test)
+  if (PS4)
+    add_executable(SDL2-ps4 test/testps4.c)
+    target_link_directories(SDL2-ps4 PRIVATE ${CMAKE_BINARY_DIR})
+    target_link_libraries(SDL2-ps4 SDL2-static)
+    add_dependencies(SDL2-ps4 SDL2-static)
+    add_self(SDL2-ps4)
+  else ()
+    include_directories(BEFORE "${SDL2_BINARY_DIR}/include")
+    include_directories(AFTER "${SDL2_SOURCE_DIR}/include")
+    file(GLOB TEST_SOURCES ${SDL2_SOURCE_DIR}/src/test/*.c)
+    add_library(SDL2_test STATIC ${TEST_SOURCES})
+    add_subdirectory(test)
+  endif()
 endif()
-
-if (PS4)
-  add_executable(SDL2-ps4 test/testps4.c)
-  target_link_directories(SDL2-ps4 PRIVATE ${CMAKE_BINARY_DIR})
-  target_link_libraries(SDL2-ps4 SDL2-static)
-  add_dependencies(SDL2-ps4 SDL2-static)
-  add_self(SDL2-ps4)
-endif ()
 
 ##### Installation targets #####
 install(TARGETS ${_INSTALL_LIBS} EXPORT SDL2Targets
