@@ -76,7 +76,7 @@ set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 # Set pkg-config for the same
 find_program(PKG_CONFIG_EXECUTABLE NAMES openorbis-pkg-config HINTS "${OPENORBIS}/usr/bin")
 if (NOT PKG_CONFIG_EXECUTABLE)
-    message(WARNING "Could not find openorbis-pkg-config: try installing ps4-openorbis-pkg-config")
+#    message(WARNING "Could not find openorbis-pkg-config: try installing ps4-openorbis-pkg-config")
 endif ()
 
 function(add_self project)
